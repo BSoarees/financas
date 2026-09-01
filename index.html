@@ -1,0 +1,1799 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Financas - Orcamento ideal</title>
+  <meta name="theme-color" content="#10b24f" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Financas" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Ccircle%20cx='16'%20cy='16'%20r='15'%20fill='%2310b24f'/%3E%3Ccircle%20cx='16'%20cy='16'%20r='15'%20fill='none'%20stroke='white'%20stroke-opacity='0.3'%20stroke-width='2'/%3E%3Ctext%20x='16'%20y='23'%20text-anchor='middle'%20font-size='19'%20font-weight='800'%20fill='white'%20font-family='Arial'%3E%24%3C/text%3E%3C/svg%3E" />
+  <style>
+    @property --p { syntax: "<number>"; inherits: false; initial-value: 0; }
+
+    :root {
+      --plane: #f4f5f2;
+      --surface: #ffffff;
+      --surface-2: #fafbf8;
+      --ink: #141815;
+      --ink-2: #5c635b;
+      --muted: #8b918a;
+      --line: #e8eae4;
+      --hair: rgba(20, 24, 21, 0.08);
+      --good: #0ca30c;
+      --good-soft: #e7f4e7;
+      --good-track: #d3ecd3;
+      --warn: #c07c14;
+      --warn-soft: #f8ecd4;
+      --crit: #d03b3b;
+      --crit-soft: #f8e2e2;
+      --crit-track: #f0cccc;
+      --accent: #2a78d6;
+      --accent-soft: #dce9f9;
+      --accent-track: #cfe0f6;
+      --shadow-sm: 0 1px 2px rgba(20, 24, 21, 0.04), 0 1px 3px rgba(20, 24, 21, 0.05);
+      --shadow-md: 0 8px 24px rgba(20, 24, 21, 0.06), 0 2px 6px rgba(20, 24, 21, 0.05);
+      --radius: 16px;
+      --radius-sm: 11px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      color-scheme: light;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background:
+        radial-gradient(1200px 600px at 80% -10%, #eef4ef 0%, transparent 58%),
+        radial-gradient(900px 500px at -8% 2%, #eef1f6 0%, transparent 52%),
+        var(--plane);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, select { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+
+    .app {
+      display: grid;
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 22px;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ---------- sidebar ---------- */
+    aside { display: grid; gap: 16px; align-content: start; position: sticky; top: 22px; max-height: calc(100vh - 44px); overflow: auto; }
+
+    .brand { display: flex; align-items: center; gap: 12px; padding: 2px 4px; }
+    .logo { flex: 0 0 auto; display: grid; place-items: center; filter: drop-shadow(0 2px 5px rgba(10, 143, 60, 0.28)); }
+    .logo svg { display: block; }
+    .mobile-top { display: none; }
+    .brand h1 { margin: 0; font-size: 19px; letter-spacing: -0.01em; }
+    .brand span { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; }
+    .brand button { margin-left: auto; }
+
+    .composer { padding: 18px; display: grid; gap: 13px; }
+    h2.block, .panel-title { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); font-weight: 700; }
+
+    .field { display: grid; gap: 6px; }
+    .field > span { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+
+    .input {
+      min-height: 42px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface-2);
+      padding: 0 13px; width: 100%; transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+    }
+    .input:focus { outline: none; background: var(--surface); border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    select.input { appearance: auto; }
+
+    .money-field { position: relative; }
+    .money-field::before { content: "R$"; position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; pointer-events: none; z-index: 1; }
+    .money-field .input { padding-left: 36px; font-variant-numeric: tabular-nums; }
+
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .seg { display: flex; flex-wrap: wrap; gap: 4px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 11px; padding: 4px; }
+    .seg button { flex: 1 1 40%; border: 0; background: transparent; border-radius: 8px; min-height: 32px; font-size: 13px; color: var(--ink-2); font-weight: 600; transition: all 0.16s ease; }
+    .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    .chip { border: 1px solid var(--line); background: var(--surface-2); border-radius: 999px; padding: 7px 12px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); transition: all 0.16s ease; }
+    .chip[aria-pressed="true"] { border-color: transparent; background: var(--ink); color: #fff; }
+
+    .btn-primary { min-height: 44px; border: 0; border-radius: 12px; background: var(--ink); color: #fff; font-weight: 700; font-size: 14px; box-shadow: var(--shadow-sm); transition: transform 0.12s ease, box-shadow 0.18s; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .hint { font-size: 12px; color: var(--muted); line-height: 1.45; margin: 0; }
+
+    details.fold { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-sm); overflow: hidden; }
+    details.fold > summary { cursor: pointer; list-style: none; padding: 15px 18px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.09em; font-weight: 700; color: var(--muted); display: flex; align-items: center; justify-content: space-between; }
+    details.fold > summary::-webkit-details-marker { display: none; }
+    details.fold > summary::after { content: "+"; font-size: 16px; color: var(--ink-2); }
+    details.fold[open] > summary::after { content: "−"; }
+    .fold-body { padding: 0 18px 18px; display: grid; gap: 12px; }
+    .fold-body .ghost { min-height: 40px; border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; font-weight: 600; font-size: 13px; color: var(--ink-2); }
+    .fold-body .ghost:hover { border-color: var(--ink-2); }
+    .file-status { font-size: 12px; color: var(--muted); line-height: 1.4; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+    .file-status.connected { color: var(--good); border-color: var(--good-track); background: var(--good-soft); }
+    .file-status.warn { color: var(--crit); border-color: var(--crit); background: var(--surface); }
+
+    /* ---------- main ---------- */
+    main { display: grid; gap: 18px; min-width: 0; align-content: start; }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    body.booted main > * { animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    body.booted main > *:nth-child(2) { animation-delay: 0.04s; }
+    body.booted main > *:nth-child(3) { animation-delay: 0.08s; }
+    body.booted main > *:nth-child(4) { animation-delay: 0.12s; }
+
+    .hero { display: grid; grid-template-columns: auto 1fr; gap: 26px; align-items: center; padding: 22px 24px; }
+    .ring { --p: 0; width: 168px; height: 168px; position: relative; flex: 0 0 auto; }
+    .ring::before {
+      content: ""; position: absolute; inset: 0; border-radius: 50%;
+      background: conic-gradient(var(--good) calc(var(--p) * 1%), var(--good-track) 0);
+      -webkit-mask: radial-gradient(farthest-side, transparent 63%, #000 64%);
+      mask: radial-gradient(farthest-side, transparent 63%, #000 64%);
+      transition: --p 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .ring-label { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: 2px; }
+    .ring-label b { font-size: 44px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+    .ring-label small { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+    .hero-copy h3 { margin: 0 0 5px; font-size: 15px; line-height: 1.35; }
+    .hero-copy p { margin: 0; color: var(--ink-2); font-size: 13.5px; line-height: 1.5; max-width: 52ch; }
+    .accent { color: var(--good); font-weight: 700; }
+
+    .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .kpi { padding: 15px 16px; }
+    .kpi span { display: block; font-size: 12px; color: var(--muted); margin-bottom: 7px; }
+    .kpi b { display: block; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+    .kpi .delta { font-size: 12px; font-weight: 700; margin-top: 6px; color: var(--ink-2); }
+    .delta.up { color: var(--good); }
+    .delta.warnc { color: var(--crit); }
+
+    .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .tabs { display: inline-flex; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 4px; box-shadow: var(--shadow-sm); }
+    .tabs button { border: 0; background: transparent; border-radius: 9px; min-height: 34px; padding: 0 15px; font-weight: 600; font-size: 13.5px; color: var(--ink-2); transition: all 0.18s; }
+    .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+    .toolbar .ghost { min-height: 38px; padding: 0 14px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; font-weight: 600; font-size: 13px; color: var(--ink-2); box-shadow: var(--shadow-sm); }
+    .toolbar .ghost:hover { border-color: var(--ink-2); }
+
+    /* ---------- budget ---------- */
+    .budget { padding: 20px 22px; display: grid; gap: 18px; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .month-pick { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+    .month-pick select { min-height: 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 0 10px; }
+
+    .targets-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+    .targets-row label { display: grid; gap: 4px; font-size: 11px; color: var(--ink-2); font-weight: 600; }
+    .targets-row input { width: 62px; min-height: 34px; text-align: right; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); padding: 0 8px; font-variant-numeric: tabular-nums; }
+    .targets-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .targets-total { font-size: 12px; font-weight: 700; align-self: center; padding: 0 4px 8px; }
+    .targets-total.ok { color: var(--good); }
+    .targets-total.bad { color: var(--crit); }
+
+    .potes { display: grid; gap: 15px; }
+    .pote { display: grid; grid-template-columns: 160px 1fr 140px; gap: 16px; align-items: center; }
+    .pote .name { font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .pote .name i { width: 9px; height: 9px; border-radius: 3px; background: var(--good); flex: 0 0 auto; }
+    .pote.over .name i { background: var(--warn); }
+    .pote.fora .name i { background: var(--crit); }
+    .track { position: relative; height: 12px; border-radius: 999px; background: var(--good-track); }
+    .pote.over .track { background: var(--warn-soft); }
+    .pote.fora .track { background: var(--crit-track); }
+    .fill { position: absolute; inset: 0 auto 0 0; height: 100%; border-radius: 999px; background: var(--good); transition: width 1s cubic-bezier(0.22, 1, 0.36, 1); }
+    .pote.over .fill { background: var(--warn); }
+    .pote.fora .fill { background: var(--crit); }
+    .ideal-tick { position: absolute; top: -4px; bottom: -4px; width: 2px; border-radius: 2px; background: var(--ink); opacity: 0.42; }
+    .ideal-tick[data-l]::after { content: attr(data-l); position: absolute; top: -17px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--muted); white-space: nowrap; opacity: 0; transition: opacity 0.15s; }
+    .pote:hover .ideal-tick[data-l]::after, .ideal-tick.dragging[data-l]::after { opacity: 1; }
+    .ideal-tick.draggable { cursor: ew-resize; touch-action: none; }
+    .ideal-tick .knob { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); width: 13px; height: 13px; border-radius: 50%; background: var(--ink); border: 2px solid var(--surface); box-shadow: var(--shadow-sm); transition: background 0.15s, transform 0.12s; }
+    .ideal-tick.ideal-guide { background: var(--accent); opacity: .85; }
+    .ideal-tick.ideal-guide .knob { background: var(--surface); border-color: var(--accent); }
+    .pote:hover .ideal-tick .knob { background: var(--accent); }
+    .ideal-tick.dragging .knob { background: var(--accent); transform: translateX(-50%) scale(1.15); }
+    .bar-col { cursor: pointer; }
+    .bar-col:hover .bar { filter: brightness(0.94); }
+    .bar-col.dim:hover .bar { background: #c3e6c3; }
+    .pote .nums { text-align: right; font-variant-numeric: tabular-nums; }
+    .pote .nums b { font-size: 14px; font-weight: 700; }
+    .pote .nums span { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+    .pote .nums .actual-num { color: var(--accent); font-weight: 700; }
+    .fora-flag { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; color: var(--crit); background: var(--crit-soft); padding: 2px 8px; border-radius: 999px; }
+    .fora-flag.ok { color: var(--good); background: var(--good-soft); }
+    .debt-target { display: grid; gap: 4px; font-size: 11px; font-weight: 600; color: var(--crit); margin-left: 8px; padding-left: 10px; border-left: 1px solid var(--line); }
+    .debt-target input { width: 62px; min-height: 34px; text-align: right; border: 1px solid var(--crit-track); border-radius: 9px; background: var(--crit-soft); padding: 0 8px; font-variant-numeric: tabular-nums; color: var(--ink); }
+    .debt-target input:focus { outline: none; border-color: var(--crit); box-shadow: 0 0 0 3px var(--crit-soft); }
+
+    .traj { border-top: 1px solid var(--line); padding-top: 16px; }
+    .traj .panel-title { margin-bottom: 16px; }
+    .bars { display: flex; align-items: end; gap: 10px; height: 128px; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; justify-content: end; height: 100%; }
+    .bar { width: 100%; max-width: 46px; border-radius: 6px 6px 0 0; background: var(--good); min-height: 4px; transition: height 1s cubic-bezier(0.22, 1, 0.36, 1); position: relative; }
+    .bar b { position: absolute; top: -19px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+    .bar-col.dim .bar { background: var(--good-track); }
+    .bar-col small { font-size: 11.5px; color: var(--muted); }
+
+    /* ---------- months view ---------- */
+    .pos { color: var(--good); } .neg { color: var(--crit); }
+    .months2 { display: grid; gap: 16px; }
+    .mstrip { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 8px; }
+    .mchip { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow-sm); text-align: left; transition: transform 0.14s, border-color 0.14s; }
+    .mchip:hover { border-color: #c7cdc3; transform: translateY(-1px); }
+    .mchip.active { background: var(--ink); border-color: var(--ink); }
+    .mc-label { font-size: 13px; font-weight: 700; color: var(--ink); }
+    .mc-cash { font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 600; }
+    .mchip.active .mc-label { color: #fff; }
+    .mchip.active .mc-cash { color: #cfe0f6; }
+    .mchip.active .mc-cash.neg { color: #f3b0b0; }
+
+    .mpanel { padding: 22px 24px; display: grid; gap: 18px; }
+    .mpanel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .mp-title { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
+    .mp-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+    .mp-result { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .mstats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .mstat { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+    .mstat span { display: block; font-size: 11.5px; color: var(--muted); margin-bottom: 6px; }
+    .mstat b { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .mstat .compare { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+    .mstat .compare b { font-size: 16px; }
+    .mstat .compare small { color: var(--muted); font-size: 9px; text-transform: uppercase; }
+
+    .alloc { display: grid; gap: 10px; }
+    .alloc-head { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 700; }
+    .alloc-bar { display: flex; gap: 2px; height: 22px; border-radius: 8px; overflow: hidden; background: var(--surface-2); }
+    .alloc-seg { min-width: 3px; transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+    .alloc-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+    .al-item { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); }
+    .al-item i { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
+    .al-item b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+    .mlists { display: grid; gap: 16px; }
+    .mlist h3 { margin: 0 0 2px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 700; }
+    .mrow { display: grid; grid-template-columns: 28px 160px 1fr auto auto auto; gap: 12px; align-items: center; min-height: 46px; border-top: 1px solid var(--line); }
+    .mrow-actions { display: flex; gap: 6px; }
+    .rowcheck { width: 23px; height: 23px; border: 2px solid var(--line); border-radius: 999px; background: var(--surface); color: #fff; font-size: 12px; font-weight: 800; line-height: 1; display: grid; place-items: center; cursor: pointer; padding: 0; justify-self: center; transition: background 0.15s, border-color 0.15s; }
+    .rowcheck:hover { border-color: var(--good); }
+    .rowcheck.on { background: var(--good); border-color: var(--good); }
+    .rowcheck.partial { background: var(--warn); border-color: var(--warn); }
+    .cardpay { display: flex; align-items: center; gap: 10px; justify-self: end; }
+    .cp-in { width: 108px; }
+    .cp-rest { font-size: 11px; color: var(--muted); white-space: nowrap; }
+    .cp-rest.ok { color: var(--good); font-weight: 700; }
+    .mrow.done { background: color-mix(in srgb, var(--good) 6%, transparent); border-radius: 8px; }
+    .mrow.done .mrow-name { color: var(--muted); text-decoration: line-through; }
+    .mrow.partial { background: color-mix(in srgb, var(--warn) 7%, transparent); border-radius: 8px; }
+    .mrow.partial .rowcheck { border-color: var(--warn); color: var(--warn); background: var(--warn-soft); }
+    .donecount { font-variant-numeric: tabular-nums; }
+    .donecount.all { color: var(--good); }
+    .dayadd { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px; border: 1px dashed #cfd4cb; border-radius: 12px; background: var(--surface-2); margin-top: 6px; }
+    .dayadd-label { font-size: 12px; font-weight: 700; color: var(--ink-2); }
+    .dayadd .input { min-height: 38px; }
+    .dayadd .da-name { flex: 1 1 160px; }
+    .dayadd .money-field { flex: 0 0 128px; }
+    .dayadd .da-bucket { flex: 0 0 auto; max-width: 150px; }
+    .da-btn { min-height: 38px; padding: 0 18px; border: 0; background: var(--ink); color: #fff; border-radius: 10px; font-weight: 600; cursor: pointer; }
+    .da-btn:hover { background: #2a322b; }
+    .mlist h3 + .mrow { border-top: 0; }
+    .mrow-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+    .mrow-name em { font-style: normal; font-size: 11px; color: var(--muted); margin-left: 8px; }
+    .money-mini { position: relative; justify-self: end; }
+    .money-mini::after { content: attr(data-label); position: absolute; top: -9px; right: 8px; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .money-mini::before { content: "R$"; position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--muted); pointer-events: none; }
+    .mrow-val { width: 132px; min-height: 34px; text-align: right; border: 1px solid transparent; border-radius: 9px; background: transparent; padding: 4px 10px 4px 32px; font-variant-numeric: tabular-nums; font-weight: 600; transition: border-color 0.14s, background 0.14s, box-shadow 0.14s; }
+    .mrow-val:hover { border-color: var(--line); background: var(--surface-2); }
+    .mrow-val:focus { outline: none; border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px var(--accent-soft); }
+    span.mrow-val.ro { display: inline-block; padding: 4px 2px 4px 10px; color: var(--ink-2); }
+    .mrow.cardrow { grid-template-columns: 28px 160px 1fr auto; }
+
+    .pill-wrap { position: relative; display: inline-flex; justify-self: start; }
+    .pill-wrap::after { content: "▾"; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 9px; color: var(--pc); pointer-events: none; }
+    .pote-pill { appearance: none; -webkit-appearance: none; min-height: 27px; max-width: 160px; border: 1px solid color-mix(in srgb, var(--pc) 32%, #fff); border-radius: 999px; padding: 2px 24px 2px 12px; font-size: 11.5px; font-weight: 700; color: var(--pc); background: color-mix(in srgb, var(--pc) 13%, #fff); cursor: pointer; }
+    .pote-pill:focus { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 22%, #fff); }
+    .kind-dot { width: 11px; height: 11px; border-radius: 50%; justify-self: start; margin-left: 8px; }
+    .kind-dot.income { background: var(--good); }
+    .kind-dot.debt { background: var(--crit); }
+    .kind-dot.card { background: var(--accent); }
+    .minibtn { width: 30px; height: 30px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; display: grid; place-items: center; color: var(--ink-2); font-size: 13px; }
+    .minibtn:hover { border-color: var(--ink-2); }
+    .minibtn.danger:hover { color: var(--crit); border-color: var(--crit); }
+
+    /* ---------- items table ---------- */
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-sm); }
+    table { width: 100%; min-width: 900px; border-collapse: separate; border-spacing: 0; }
+    th, td { border-bottom: 1px solid var(--line); padding: 10px 12px; text-align: right; height: 46px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    th:first-child, td:first-child { position: sticky; left: 0; z-index: 2; text-align: left; background: var(--surface); min-width: 260px; white-space: normal; }
+    th { position: sticky; top: 0; z-index: 3; background: var(--surface-2); color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+    th:first-child { z-index: 4; }
+    tr:last-child td { border-bottom: 0; }
+    .section-row td { background: var(--surface-2); color: var(--ink); font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; }
+    .item-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .item-name > span.nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pill { display: inline-flex; align-items: center; justify-content: center; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 11px; font-weight: 700; flex: 0 0 auto; }
+    .pill.income { color: var(--good); background: var(--good-soft); }
+    .pill.expense { color: var(--ink-2); background: var(--surface-2); border: 1px solid var(--line); }
+    .pill.debt { color: var(--crit); background: var(--crit-soft); }
+    .pill.saving { color: var(--accent); background: var(--accent-soft); }
+    .bucket-select { min-height: 28px; padding: 2px 8px; font-size: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); color: var(--ink-2); }
+    .cell-input { width: 100px; text-align: right; border: 1px solid transparent; background: transparent; min-height: 30px; padding: 4px 8px; border-radius: 8px; font-variant-numeric: tabular-nums; }
+    .cell-input:hover { border-color: var(--line); background: var(--surface-2); }
+    .cell-input:focus { outline: none; background: var(--surface); border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .item-actions { margin-left: auto; display: flex; gap: 4px; opacity: 0; transition: opacity 0.14s; }
+    tr:hover .item-actions { opacity: 1; }
+
+    /* ---------- debts ---------- */
+    .debt-line { border-top: 1px solid var(--line); font-size: 13px; }
+    .debt-line:first-child { border-top: 0; }
+    .debt-line summary { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 12px 2px; cursor: pointer; list-style: none; }
+    .debt-line summary::-webkit-details-marker { display: none; }
+    .debt-line summary strong { display: block; }
+    .debt-line summary .sub { color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+    .debt-line summary .pay { font-variant-numeric: tabular-nums; font-weight: 700; }
+    .debt-body { display: grid; gap: 9px; padding: 2px 0 14px; }
+    .debt-body label { display: grid; gap: 5px; font-size: 11px; font-weight: 600; color: var(--ink-2); }
+    .debt-body input, .debt-body select { min-height: 38px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); padding: 0 10px; }
+    .debt-body input:focus, .debt-body select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .debt-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .debt-sim { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+    .debt-sim button { min-height: 38px; padding: 0 14px; border: 1px solid var(--ink); background: var(--ink); color: #fff; border-radius: 9px; font-weight: 600; }
+    .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; margin-left: 6px; }
+    .badge.refi { color: var(--accent); background: var(--accent-soft); }
+    .badge.nego { color: var(--warn); background: var(--warn-soft); }
+    .badge.pagar { color: var(--good); background: var(--good-soft); }
+    .badge.cara { color: var(--crit); background: var(--crit-soft); }
+
+    .empty { color: var(--muted); padding: 20px; text-align: center; font-size: 13px; }
+
+    /* ---------- cards view ---------- */
+    .cards-view { padding: 20px 22px; display: grid; gap: 16px; }
+    .addcard { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .addcard .input { max-width: 240px; }
+    .card-block { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: grid; gap: 14px; background: var(--surface-2); }
+    .card-block header { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+    .card-block header strong { font-size: 15px; }
+    .card-block header span { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .card-block .over-l { color: var(--crit); }
+    .cardtrack { height: 10px; background: var(--accent-track); }
+    .cardtrack .fill { background: var(--accent); }
+    .cardtrack .fill.cardover { background: var(--crit); }
+    .cardfaturas { display: flex; gap: 8px; align-items: end; height: 96px; }
+    .cf-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; justify-content: end; }
+    .cf-bar { width: 100%; max-width: 40px; background: var(--accent); border-radius: 5px 5px 0 0; transition: height 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+    .cf-col span { font-size: 11px; color: var(--muted); }
+    .cf-col small { font-size: 10px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+    .addpurchase { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .addpurchase .input { min-height: 38px; }
+    .addpurchase .pu-name { flex: 1 1 150px; }
+    .addpurchase .money-field { flex: 0 0 130px; }
+    .addpurchase .pu-mode { width: 118px; }
+    .addpurchase .pu-n { width: 62px; text-align: center; }
+    .addpurchase .ghost { min-height: 38px; padding: 0 16px; border: 0; background: var(--ink); color: #fff; border-radius: 10px; font-weight: 600; }
+    .pu-list { display: grid; gap: 2px; }
+    .pu-row { display: grid; grid-template-columns: minmax(150px, 1fr) auto 150px auto auto; gap: 10px; align-items: center; padding: 8px 4px; border-top: 1px solid var(--line); font-size: 13px; }
+    .pu-row.editing { grid-template-columns: minmax(140px, 1fr) 120px 150px 120px 70px 140px auto auto; }
+    .pu-nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pu-b { font-size: 11px; font-weight: 700; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; }
+    .pu-v { font-variant-numeric: tabular-nums; font-weight: 700; }
+    .pu-edit { width: 100%; min-height: 34px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); padding: 5px 9px; color: var(--ink); }
+    .pu-value-wrap { display: flex; align-items: center; gap: 5px; }
+    .pu-value-wrap small { color: var(--muted); white-space: nowrap; }
+
+    /* ---------- debts view ---------- */
+    .debts-view { padding: 20px 22px; display: grid; gap: 14px; }
+    .debt-summary { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+    .debt-explainer { font-size: 12.5px; color: var(--ink-2); line-height: 1.55; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+    .debt-explainer b { color: var(--ink); }
+
+    .debt-table { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    .dt-head { display: grid; grid-template-columns: 46px 1fr; align-items: center; background: var(--surface-2); border-bottom: 1px solid var(--line); }
+    .dt-cols, .dt-detail summary { display: grid; grid-template-columns: 1fr 90px 130px; gap: 10px; align-items: center; padding-right: 14px; }
+    .dt-cols { padding-top: 10px; padding-bottom: 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; }
+    .dt-cols .r, .dt-detail summary .r { text-align: right; }
+    .dt-row { display: grid; grid-template-columns: 46px 1fr; align-items: center; border-top: 1px solid var(--line); transition: background 0.14s; }
+    .dt-row:first-child { border-top: 0; }
+    .dt-row.sel { background: var(--accent-soft); }
+    .dt-check { display: grid; place-items: center; padding-left: 14px; }
+    .dt-check input { width: 17px; height: 17px; accent-color: var(--ink); cursor: pointer; }
+    .dt-detail summary { list-style: none; cursor: pointer; padding: 12px 14px 12px 0; }
+    .dt-detail summary::-webkit-details-marker { display: none; }
+    .dt-name { font-weight: 600; font-size: 13.5px; }
+    .dt-name em { font-style: normal; font-size: 11px; color: var(--muted); font-weight: 500; margin-left: 6px; }
+    .dt-detail summary .desc { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+    .dt-detail summary .pay { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .dt-edit { display: grid; gap: 9px; padding: 4px 14px 16px 0; max-width: 560px; }
+    .dt-edit label { display: grid; gap: 5px; font-size: 11px; font-weight: 600; color: var(--ink-2); }
+    .dt-edit input { min-height: 38px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); padding: 0 10px; }
+    .dt-edit input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+    .sim-panel { border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; background: var(--surface-2); }
+    .sim-panel.empty-sim { color: var(--muted); font-size: 13px; text-align: center; padding: 20px; }
+    .sim-head { font-size: 14px; }
+    .sim-head b { font-variant-numeric: tabular-nums; }
+    .sc-inputs { display: flex; flex-wrap: wrap; gap: 10px; }
+    .sc-inputs label { display: grid; gap: 4px; font-size: 11px; font-weight: 600; color: var(--ink-2); }
+    .sc-inputs input, .sc-inputs select { min-height: 36px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 0 8px; width: 130px; }
+    .sc-table { width: 100%; min-width: 0; border-collapse: collapse; font-size: 12.5px; }
+    .sc-table th { position: static; top: auto; background: transparent; text-align: right; padding: 4px 8px; font-size: 10px; color: var(--muted); border: 0; height: auto; min-width: 0; }
+    .sc-table th:first-child { position: static; text-align: left; min-width: 0; background: transparent; }
+    .sc-table td { text-align: right; padding: 7px 8px; border: 0; border-top: 1px solid var(--line); height: auto; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .sc-table td.l { text-align: left; font-weight: 600; }
+    .sc-table td.best { color: var(--good); font-weight: 800; }
+    .sc-table td.neg { color: var(--crit); }
+    .sc-table .minibtn { width: 26px; height: 26px; }
+    .sc-hint { font-size: 11px; color: var(--muted); line-height: 1.4; }
+    .trunc { color: var(--warn); cursor: help; }
+
+    .sched-total { color: var(--good); font-weight: 700; }
+    .adddebt { justify-self: start; min-height: 40px; padding: 0 16px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; font-weight: 600; color: var(--ink-2); }
+    .adddebt:hover { border-color: var(--ink-2); }
+    .pay-sched { border-top: 1px dashed var(--line); padding-top: 12px; display: grid; gap: 10px; }
+    .ps-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; }
+    .ps-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+    .ps-row label { display: grid; gap: 5px; font-size: 11px; font-weight: 600; color: var(--ink-2); }
+    .ps-row input, .ps-row select { min-height: 38px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); padding: 0 10px; }
+    .ps-row input { width: 88px; }
+    .ps-row input:focus, .ps-row select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .ps-parcela { font-size: 13px; color: var(--ink-2); padding-bottom: 9px; }
+    .ps-parcela b { color: var(--ink); font-variant-numeric: tabular-nums; }
+    .ps-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .ps-apply { min-height: 40px; padding: 0 18px; border: 0; background: var(--ink); color: #fff; border-radius: 10px; font-weight: 600; }
+    .ps-apply:hover { background: #2a322b; }
+    .ps-done { font-size: 12px; color: var(--good); font-weight: 600; }
+    .linkbtn { border: 0; background: none; color: var(--crit); font-weight: 600; cursor: pointer; text-decoration: underline; padding: 0; font-size: 12px; }
+    .deldebt { margin-left: auto; }
+
+    @media (max-width: 940px) {
+      .app { grid-template-columns: minmax(0, 1fr); }
+      aside { position: static; max-height: none; min-width: 0; }
+      .kpis { grid-template-columns: 1fr 1fr; }
+      .hero { grid-template-columns: 1fr; text-align: center; justify-items: center; }
+      .hero-copy { text-align: center; }
+      .pote { grid-template-columns: 120px 1fr; grid-template-areas: "name nums" "track track"; row-gap: 10px; }
+      .pote .name { grid-area: name; } .pote .nums { grid-area: nums; } .pote .track { grid-area: track; }
+    }
+
+    @media (max-width: 640px) {
+      .app { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 12px; overflow-x: hidden; }
+      main, aside { min-width: 0; }
+      main, .hero, .months2, .mpanel, .mlists, .alloc, .budget, .cards-view, .debts-view, .composer, .fold-body, .brand > div { grid-template-columns: minmax(0, 1fr); }
+      .hero-copy p { max-width: 100%; }
+      .mrow-name, .mc-label, .mrow, .kpi span, .mstat span { min-width: 0; }
+      .alloc-bar { max-width: 100%; }
+      .mobile-top { display: flex; align-items: center; gap: 10px; order: 0; padding: 4px 2px; }
+      .mobile-top h1 { margin: 0; font-size: 20px; letter-spacing: -0.01em; }
+      .mobile-top > div span { font-size: 12px; color: var(--muted); }
+      main { order: 1; gap: 14px; }
+      aside { order: 2; }
+      aside .brand { display: none; }
+
+      .hero { padding: 18px; gap: 14px; }
+      .ring { width: 128px; height: 128px; }
+      .ring-label b { font-size: 34px; }
+      .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .kpi { min-width: 0; }
+      .kpi b { font-size: 17px; }
+
+      .toolbar { flex-wrap: nowrap; gap: 8px; }
+      .tabs { overflow-x: auto; flex: 1; scrollbar-width: none; }
+      .tabs::-webkit-scrollbar { display: none; }
+      .tabs button { white-space: nowrap; padding: 0 13px; }
+      #addMonthBtn { flex: 0 0 auto; }
+
+      .mstrip { display: flex; overflow-x: auto; scrollbar-width: none; }
+      .mstrip::-webkit-scrollbar { display: none; }
+      .mchip { flex: 0 0 auto; min-width: 96px; }
+      .mpanel { padding: 16px; }
+      .mstats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .mstat { min-width: 0; } .mstat b { font-size: 16px; }
+      .mp-title { font-size: 18px; } .mp-result { font-size: 18px; }
+
+      .mrow { grid-template-columns: 24px minmax(0, 1fr) auto auto; grid-template-areas: "check lead actions actions" "check name projected actual"; gap: 12px 8px; padding: 10px 0; }
+      .mrow > .rowcheck { grid-area: check; align-self: center; }
+      .mrow > .pill-wrap, .mrow > .kind-dot { grid-area: lead; }
+      .mrow > .mrow-name { grid-area: name; align-self: center; }
+      .mrow > .money-mini:nth-of-type(1) { grid-area: projected; }
+      .mrow > .money-mini:nth-of-type(2) { grid-area: actual; }
+      .mrow > .mrow-actions { grid-area: actions; }
+      .mrow-val { width: 118px; }
+      .mrow.cardrow { grid-template-columns: 24px 1fr; grid-template-areas: "check name" "check pay"; }
+      .mrow.cardrow .rowcheck { grid-area: check; align-self: center; } .mrow.cardrow .kind-dot { display: none; } .mrow.cardrow .mrow-name { grid-area: name; } .mrow.cardrow .cardpay { grid-area: pay; justify-self: start; }
+
+      .budget, .cards-view, .debts-view, .mlists { gap: 14px; }
+      .budget, .cards-view, .debts-view { padding: 16px; }
+      .composer { padding: 16px; }
+      .minibtn { width: 34px; height: 34px; }
+      .targets-row { gap: 6px; }
+      .debt-target { margin-left: 0; padding-left: 0; border-left: 0; }
+      .addpurchase .pu-name, .addpurchase .money-field { flex: 1 1 100%; }
+      .pu-row { grid-template-columns: 1fr auto; }
+      .pu-row.editing { grid-template-columns: 1fr auto; }
+      .pu-row.editing .pu-edit { grid-column: 1 / -1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="mobile-top">
+      <span class="logo">
+        <svg viewBox="0 0 40 40" width="32" height="32" aria-hidden="true"><defs><linearGradient id="coinm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#18c46b"/><stop offset="1" stop-color="#0a8f3c"/></linearGradient></defs><circle cx="20" cy="20" r="18" fill="url(#coinm)"/><circle cx="20" cy="20" r="18" fill="none" stroke="#fff" stroke-opacity="0.28" stroke-width="2"/><text x="20" y="27" text-anchor="middle" font-size="20" font-weight="800" fill="#fff" font-family="system-ui, Arial">$</text></svg>
+      </span>
+      <div><h1>Finanças</h1><span>orçamento ideal</span></div>
+    </div>
+    <aside>
+      <div class="brand">
+        <span class="logo">
+          <svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><defs><linearGradient id="coin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#18c46b"/><stop offset="1" stop-color="#0a8f3c"/></linearGradient></defs><circle cx="20" cy="20" r="18" fill="url(#coin)"/><circle cx="20" cy="20" r="18" fill="none" stroke="#fff" stroke-opacity="0.28" stroke-width="2"/><text x="20" y="27" text-anchor="middle" font-size="20" font-weight="800" fill="#fff" font-family="system-ui, Arial">$</text></svg>
+        </span>
+        <div>
+          <h1>Finanças</h1>
+          <span>orçamento ideal · base privada</span>
+        </div>
+        <button class="minibtn" id="resetBtn" title="Restaurar base">↺</button>
+      </div>
+
+      <section class="card composer">
+        <h2 class="block">Lançar</h2>
+        <label class="field"><span>Nome</span><input id="nameInput" class="input" placeholder="Ex: aluguel, curso, mercado" /></label>
+        <div class="field">
+          <span>Tipo</span>
+          <div class="seg" id="kindSeg">
+            <button type="button" data-kind="expense">Saída</button>
+            <button type="button" data-kind="income">Entrada</button>
+            <button type="button" data-kind="debt">Dívida</button>
+            <button type="button" data-kind="saving">Reserva</button>
+          </div>
+        </div>
+        <div class="row2">
+          <label class="field"><span>Valor</span><div class="money-field"><input id="amountInput" class="input" type="number" step="0.01" min="0" inputmode="decimal" placeholder="0,00" /></div></label>
+          <label class="field"><span>Frequência</span>
+            <select id="frequencyInput" class="input">
+              <option value="fixed">Fixa até fim</option>
+              <option value="oneoff">Pontual</option>
+              <option value="recurring">Recorrente</option>
+            </select>
+          </label>
+        </div>
+        <div class="row2">
+          <label class="field"><span id="startLabelText">Início</span><select id="startInput" class="input"></select></label>
+          <label class="field" id="endLabel"><span>Final</span><select id="endInput" class="input"></select></label>
+        </div>
+        <div class="field" id="bucketField">
+          <span>Pote no orçamento</span>
+          <div class="chips" id="bucketChips">
+            <button type="button" class="chip" data-bucket="necessidades">Necessidades</button>
+            <button type="button" class="chip" data-bucket="lazer">Lazer</button>
+            <button type="button" class="chip" data-bucket="educacao">Educação</button>
+            <button type="button" class="chip" data-bucket="liberdade">Liberdade</button>
+            <button type="button" class="chip" data-bucket="reserva">Reserva</button>
+            <button type="button" class="chip" data-bucket="folga">Folga</button>
+            <button type="button" class="chip" data-bucket="fora">Dívidas &amp; travados</button>
+          </div>
+        </div>
+        <button class="btn-primary" id="addBtn" type="button">＋ Adicionar</button>
+        <p class="hint">Dentro dos meses você só edita: clique no valor, digite, Enter. As setas → aplicam daqui pra frente.</p>
+      </section>
+
+      <details class="fold" id="syncFold">
+        <summary>Sincronizacao</summary>
+        <div class="fold-body">
+          <div id="cloudStatus" class="file-status">Sem token. Conecte pra sincronizar com o celular.</div>
+          <label class="field"><span>Token do GitHub</span><input id="ghTokenInput" class="input" type="password" placeholder="github_pat_..." autocomplete="off" spellcheck="false" /></label>
+          <div class="row2">
+            <button class="ghost" id="ghConnectBtn" type="button">Conectar</button>
+            <button class="ghost" id="ghPullBtn" type="button">Puxar agora</button>
+          </div>
+          <p class="hint">O token fica so neste aparelho. Pra desconectar, deixe o campo vazio e clique Conectar.</p>
+        </div>
+      </details>
+
+      <details class="fold">
+        <summary>Arquivo</summary>
+        <div class="fold-body">
+          <label class="field"><span>Caixa inicial</span><input id="openingCashInput" class="input" type="number" step="0.01" /></label>
+          <button class="ghost" id="connectFileBtn" type="button">Conectar JSON privado</button>
+          <button class="ghost" id="saveFileBtn" type="button">Salvar no JSON</button>
+          <div class="row2">
+            <button class="ghost" id="exportBtn" type="button">Exportar</button>
+            <button class="ghost" id="importBtn" type="button">Importar</button>
+          </div>
+          <input id="importFile" type="file" accept="application/json" hidden />
+          <div id="fileStatus" class="file-status">Salvando no navegador. Conecte dashboard-data.private.json para persistir em arquivo.</div>
+        </div>
+      </details>
+
+    </aside>
+
+    <main>
+      <div class="toolbar">
+        <div class="tabs" id="tabs">
+          <button type="button" data-view="budget">Orçamento</button>
+          <button type="button" data-view="months">Meses</button>
+          <button type="button" data-view="cards">Cartões</button>
+          <button type="button" data-view="debts">Dívidas</button>
+        </div>
+        <button class="ghost" id="addMonthBtn" type="button">＋ Mês</button>
+      </div>
+
+      <section id="workspace"></section>
+    </main>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "crxate.financas.dashboard.v1";
+    const DATA_FILE_NAME = "dashboard-data.private.json";
+    let dataFileHandle = null;
+    let saveTimer = null;
+    let lastFileSave = null;
+    let lastFingerprint = null;
+    let applyingRemote = false;
+
+    let composerKind = "expense";
+    let composerBucket = "necessidades";
+    let cardEditId = null;
+
+    const baseMonths = [
+      { key: "2026-08", label: "Ago/26" },
+      { key: "2026-09", label: "Set/26" },
+      { key: "2026-10", label: "Out/26" },
+      { key: "2026-11", label: "Nov/26" },
+      { key: "2026-12", label: "Dez/26" }
+    ];
+
+    const seed = {
+      openingCash: 0,
+      months: baseMonths,
+      targets: { necessidades: 55, lazer: 10, educacao: 10, liberdade: 10, reserva: 5, folga: 10 },
+      targetRate: 2.5,
+      cards: [],
+      items: [
+        item("crxate", "Crxate", "income", {}),
+        item("dropshipping", "Dropshipping", "income", {}),
+        item("outras", "Outras entradas", "income", {})
+      ],
+      oldDebts: [],
+      view: "budget"
+    };
+
+    let state = loadState();
+    if (state.view === "cash") state.view = "budget";
+    if (state.view === "items") state.view = "months";
+    normalizeHorizon(state);
+    ensureBudgetFields(state);
+    lastFingerprint = stateFingerprint();
+
+    function item(id, name, kind, amounts, bucket, cardId) {
+      return { id, name, kind, amounts, actuals: {}, bucket: kind === "income" ? null : (bucket || defaultBucket(kind)), cardId: cardId || null, done: {} };
+    }
+
+    function debt(name, full, payable, status) {
+      return { id: slug(name), name, full, payable, status, plan: { n: 1, start: null } };
+    }
+
+    function repeat(amount, startKey, endKey) {
+      const out = {};
+      baseMonths.forEach((month) => { if (month.key >= startKey && month.key <= endKey) out[month.key] = amount; });
+      return out;
+    }
+
+    function defaultBucket(kind) { return kind === "debt" ? "fora" : kind === "saving" ? "reserva" : "necessidades"; }
+    function bucketOrder() { return ["necessidades", "lazer", "educacao", "liberdade", "reserva", "folga"]; }
+    function bucketLabel(bucket) {
+      return ({ necessidades: "Necessidades", lazer: "Lazer", educacao: "Educacao", liberdade: "Liberdade financeira", reserva: "Reserva", folga: "Folga / livre", fora: "Dividas & travados" })[bucket] || bucket;
+    }
+    function bucketOptions(selected) {
+      return [...bucketOrder(), "fora"].map((b) => `<option value="${b}" ${b === selected ? "selected" : ""}>${bucketLabel(b)}</option>`).join("");
+    }
+
+    function ensureBudgetFields(target) {
+      if (!target.targets) target.targets = { necessidades: 55, lazer: 10, educacao: 10, liberdade: 10, reserva: 5, folga: 10 };
+      if (target.targets.fora == null) target.targets.fora = 0;
+      if (target.targetRate == null) target.targetRate = 2.5;
+      if (!Array.isArray(target.cards)) target.cards = [];
+      if (!target.cardPaid || typeof target.cardPaid !== "object") target.cardPaid = {};
+      const fixedTargetTotal = bucketOrder().filter((bucket) => bucket !== "folga").reduce((total, bucket) => total + Number(target.targets[bucket] || 0), Number(target.targets.fora || 0));
+      target.targets.folga = Math.max(0, 100 - fixedTargetTotal);
+      (target.items || []).forEach((entry) => {
+        if (!entry.done || typeof entry.done !== "object") entry.done = {};
+        if (!entry.actuals || typeof entry.actuals !== "object") entry.actuals = {};
+        if (entry.kind === "income") { entry.bucket = null; return; }
+        if (!entry.bucket) entry.bucket = defaultBucket(entry.kind);
+        if (entry.cardId === undefined) entry.cardId = null;
+        if (entry.recurring && typeof entry.recurring === "object") {
+          const recurringAmount = Number(entry.recurring.amount || 0);
+          target.months.forEach((month) => {
+            if (month.key >= entry.recurring.start && recurringAmount > 0) entry.amounts[month.key] = recurringAmount;
+          });
+        }
+      });
+      (target.oldDebts || []).forEach((entry) => {
+        if (!entry.plan) entry.plan = { n: 1, start: null };
+      });
+    }
+
+    function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return structuredClone(seed);
+      try {
+        const parsed = JSON.parse(raw);
+        if (!parsed.months || !parsed.items) return structuredClone(seed);
+        try { localStorage.setItem(STORAGE_KEY + ".bak", raw); } catch {}
+        return parsed;
+      } catch { return structuredClone(seed); }
+    }
+
+    function normalizeHorizon(target) {
+      const byKey = new Map();
+      baseMonths.forEach((m) => byKey.set(m.key, { ...m }));
+      (Array.isArray(target.months) ? target.months : []).forEach((m) => {
+        if (m && /^\d{4}-\d{2}$/.test(m.key)) byKey.set(m.key, { key: m.key, label: m.label || monthLabel(m.key) });
+      });
+      target.months = [...byKey.values()].sort((a, b) => a.key.localeCompare(b.key));
+      const allowed = new Set(target.months.map((m) => m.key));
+      target.items = (target.items || [])
+        .map((entry) => ({ ...entry, amounts: Object.fromEntries(Object.entries(entry.amounts || {}).filter(([k]) => allowed.has(k))) }))
+        .filter((entry) => Object.keys(entry.amounts).length > 0 || ["crxate", "dropshipping", "outras"].includes(entry.id));
+      target.oldDebts = (target.oldDebts || []).map((entry) => ({
+        id: entry.id || slug(entry.name), name: entry.name, full: Number(entry.full || 0), payable: Number(entry.payable || 0),
+        status: entry.status || "", plan: entry.plan || { n: 1, start: null }
+      }));
+    }
+
+    function monthLabel(key) {
+      const labels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+      const [year, month] = String(key).split("-");
+      return `${labels[Number(month) - 1] || month}/${String(year).slice(2)}`;
+    }
+
+    function slug(text) {
+      return String(text || "item").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "item";
+    }
+
+    function stateFingerprint() { const copy = { ...state }; delete copy.updatedAt; return JSON.stringify(copy); }
+    function hasRealData(target) {
+      if (!target) return false;
+      if ((target.items || []).some((entry) => Object.keys(entry.amounts || {}).length > 0)) return true;
+      return (target.oldDebts || []).length > 0 || Number(target.openingCash || 0) !== 0;
+    }
+
+    function saveState() {
+      const changed = stateFingerprint() !== lastFingerprint;
+      if (changed && !applyingRemote) state.updatedAt = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      lastFingerprint = stateFingerprint();
+      queueFileSave();
+      if (changed && !applyingRemote) queueCloudSave();
+      updateFileStatus();
+    }
+    function queueFileSave() { if (!dataFileHandle) return; window.clearTimeout(saveTimer); saveTimer = window.setTimeout(() => writePrivateJson(false), 350); }
+
+    async function connectPrivateJson() {
+      if (!window.showOpenFilePicker) { alert("Seu navegador nao liberou acesso direto a arquivo. Use Importar/Exportar JSON como backup."); return; }
+      try {
+        const [handle] = await window.showOpenFilePicker({ multiple: false, types: [{ description: "JSON financeiro privado", accept: { "application/json": [".json"] } }] });
+        const file = await handle.getFile();
+        const parsed = JSON.parse(await file.text());
+        if (!isValidData(parsed)) throw new Error("Arquivo invalido");
+        dataFileHandle = handle; state = parsed; normalizeHorizon(state); ensureBudgetFields(state);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        render(); await writePrivateJson(false);
+      } catch (error) { if (error.name === "AbortError") return; alert("Nao consegui conectar esse JSON."); }
+    }
+
+    async function savePrivateJsonManually() {
+      if (!window.showSaveFilePicker && !dataFileHandle) { exportJson(); return; }
+      try {
+        if (!dataFileHandle) dataFileHandle = await window.showSaveFilePicker({ suggestedName: DATA_FILE_NAME, types: [{ description: "JSON financeiro privado", accept: { "application/json": [".json"] } }] });
+        await writePrivateJson(true);
+      } catch (error) { if (error.name === "AbortError") return; alert("Nao consegui salvar no JSON."); }
+    }
+
+    async function writePrivateJson(showAlert) {
+      if (!dataFileHandle) return;
+      const writable = await dataFileHandle.createWritable();
+      await writable.write(JSON.stringify(state, null, 2));
+      await writable.close();
+      lastFileSave = new Date(); updateFileStatus();
+      if (showAlert) alert("JSON privado salvo.");
+    }
+
+    function isValidData(c) { return Boolean(c && Array.isArray(c.months) && Array.isArray(c.items) && Array.isArray(c.oldDebts)); }
+
+    function updateFileStatus() {
+      const status = document.getElementById("fileStatus");
+      if (!status) return;
+      if (!dataFileHandle) { status.classList.remove("connected"); status.textContent = "Salvando no navegador. Conecte dashboard-data.private.json para persistir em arquivo."; return; }
+      status.classList.add("connected");
+      const savedText = lastFileSave ? `Ultimo save: ${lastFileSave.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}.` : "Arquivo conectado.";
+      status.textContent = `${DATA_FILE_NAME} conectado. ${savedText}`;
+    }
+
+    /* ---------- sync: state.json em repo privado no GitHub ---------- */
+    const GH_OWNER = "BSoarees";
+    const GH_REPO = "financas-data";
+    const GH_PATH = "state.json";
+    const GH_BRANCH = "main";
+    const TOKEN_KEY = "crxate.financas.gh.token";
+
+    let ghSha = null;
+    let cloudTimer = null;
+    let cloudBusy = false;
+    let cloudPending = false;
+    let cloudStatusText = "";
+
+    function ghToken() { try { return localStorage.getItem(TOKEN_KEY) || ""; } catch { return ""; } }
+    function timeLabel(date) { return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }); }
+
+    function toBase64(text) {
+      const bytes = new TextEncoder().encode(text);
+      let binary = "";
+      bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+      return btoa(binary);
+    }
+    function fromBase64(value) {
+      const binary = atob(String(value).replace(/\s/g, ""));
+      return new TextDecoder().decode(Uint8Array.from(binary, (ch) => ch.charCodeAt(0)));
+    }
+
+    function setCloudStatus(text, tone) {
+      cloudStatusText = text;
+      const el = document.getElementById("cloudStatus");
+      if (!el) return;
+      el.textContent = text;
+      el.classList.toggle("connected", tone === "ok");
+      el.classList.toggle("warn", tone === "warn");
+    }
+
+    function ghErrorText(status) {
+      if (status === 401) return "Token recusado. Gere outro e conecte de novo.";
+      if (status === 403) return "Token sem permissao de escrita no repo.";
+      if (status === 404) return "Repo ou arquivo nao encontrado. Confira o acesso do token.";
+      return `GitHub respondeu ${status}.`;
+    }
+
+    async function ghRequest(method, body) {
+      const token = ghToken();
+      if (!token) throw new Error("sem-token");
+      const base = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
+      const url = method === "GET" ? `${base}?ref=${GH_BRANCH}&t=${Date.now()}` : base;
+      const headers = { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
+      if (body) headers["Content-Type"] = "application/json";
+      return fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined, cache: "no-store" });
+    }
+
+    function adoptRemote(remote) {
+      try { localStorage.setItem(STORAGE_KEY + ".conflito", JSON.stringify(state)); } catch {}
+      applyingRemote = true;
+      state = remote;
+      normalizeHorizon(state);
+      ensureBudgetFields(state);
+      lastFingerprint = stateFingerprint();
+      render();
+      applyingRemote = false;
+    }
+
+    async function cloudPull(options) {
+      const opts = options || {};
+      if (!ghToken()) { setCloudStatus("Sem token. Conecte pra sincronizar com o celular."); return; }
+      if (!navigator.onLine) { setCloudStatus("Sem conexao. Sincroniza quando voltar.", "warn"); return; }
+      setCloudStatus("Buscando...");
+      let res;
+      try { res = await ghRequest("GET"); }
+      catch { setCloudStatus("Nao consegui falar com o GitHub.", "warn"); return; }
+
+      if (res.status === 404) { ghSha = null; setCloudStatus("Repo vazio. Enviando o que esta neste aparelho..."); cloudPush(); return; }
+      if (!res.ok) { setCloudStatus(ghErrorText(res.status), "warn"); return; }
+
+      let remote = null;
+      try {
+        const payload = await res.json();
+        ghSha = payload.sha || null;
+        remote = JSON.parse(fromBase64(payload.content));
+      } catch { setCloudStatus("O state.json do repo esta ilegivel.", "warn"); return; }
+      if (!isValidData(remote)) { setCloudStatus("O state.json do repo esta invalido.", "warn"); return; }
+
+      const remoteAt = remote.updatedAt || "";
+      const localAt = state.updatedAt || "";
+      if (remoteAt && remoteAt === localAt) { setCloudStatus(`Em dia. Ultima checagem ${timeLabel(new Date())}.`, "ok"); return; }
+      if (localAt && (!remoteAt || localAt > remoteAt)) { setCloudStatus("Este aparelho esta na frente. Enviando..."); cloudPush(); return; }
+      if (!localAt && hasRealData(state) && !opts.force) {
+        const usarRemoto = confirm(["Este aparelho tem dados que nunca foram sincronizados.", "", "OK = usar a versao que esta no repositorio", "Cancelar = mandar a versao deste aparelho pro repositorio"].join("\n"));
+        if (!usarRemoto) { cloudPush(); return; }
+      }
+      adoptRemote(remote);
+      setCloudStatus(`Atualizado do repo ${timeLabel(new Date())}.`, "ok");
+    }
+
+    function queueCloudSave() {
+      if (!ghToken()) return;
+      window.clearTimeout(cloudTimer);
+      cloudTimer = window.setTimeout(cloudPush, 2500);
+    }
+
+    async function cloudPush() {
+      if (!ghToken()) return;
+      if (cloudBusy) { cloudPending = true; return; }
+      if (!navigator.onLine) { setCloudStatus("Sem conexao. Salvo aqui, envio quando voltar.", "warn"); return; }
+      cloudBusy = true;
+      setCloudStatus("Salvando no repo...");
+      let conflito = false;
+      try {
+        const body = { message: `financas: ${new Date().toLocaleString("pt-BR")}`, content: toBase64(JSON.stringify(state, null, 2)), branch: GH_BRANCH };
+        if (ghSha) body.sha = ghSha;
+        const res = await ghRequest("PUT", body);
+        if (res.status === 409 || res.status === 422) { ghSha = null; conflito = true; }
+        else if (!res.ok) setCloudStatus(ghErrorText(res.status), "warn");
+        else {
+          const payload = await res.json();
+          ghSha = (payload.content && payload.content.sha) || null;
+          setCloudStatus(`Sincronizado ${timeLabel(new Date())}.`, "ok");
+        }
+      } catch {
+        setCloudStatus("Nao consegui enviar. Tento de novo no proximo save.", "warn");
+      } finally {
+        cloudBusy = false;
+      }
+      if (conflito) { setCloudStatus("Tem versao mais nova no repo. Conferindo...", "warn"); await cloudPull({ force: false }); return; }
+      if (cloudPending) { cloudPending = false; queueCloudSave(); }
+    }
+
+    function connectToken() {
+      const input = document.getElementById("ghTokenInput");
+      const value = input.value.trim();
+      if (!value) {
+        localStorage.removeItem(TOKEN_KEY);
+        ghSha = null;
+        setCloudStatus("Token removido. Este aparelho parou de sincronizar.");
+        return;
+      }
+      localStorage.setItem(TOKEN_KEY, value);
+      input.value = "";
+      ghSha = null;
+      cloudPull({});
+    }
+
+    function money(value) { return Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
+    function attr(value) { return String(value == null ? "" : value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+    function numberValue(value) { const p = Number(String(value).replace(",", ".")); return Number.isFinite(p) ? p : 0; }
+
+    function monthTotals() {
+      let running = Number(state.openingCash || 0);
+      return state.months.map((month) => {
+        const income = sumItems(month.key, "income");
+        const expenses = sumItems(month.key, "expense") + sumItems(month.key, "debt") + sumItems(month.key, "saving");
+        const result = income - expenses; running += result;
+        return { month, income, expenses, result, cash: running };
+      });
+    }
+    function sumItems(monthKey, kind) { return state.items.filter((e) => e.kind === kind).reduce((t, e) => t + Number(e.amounts[monthKey] || 0), 0); }
+
+    function monthIncome(monthKey) { return sumItems(monthKey, "income"); }
+    function monthActualIncome(monthKey) { return state.items.filter((entry) => entry.kind === "income").reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0); }
+    function monthActualExpenses(monthKey) {
+      const items = state.items.filter((entry) => entry.kind !== "income" && !entry.cardId).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
+      const cards = state.cards.reduce((total, card) => total + Number(state.cardPaid[card.id] && state.cardPaid[card.id][monthKey] || 0), 0);
+      return items + cards;
+    }
+    function itemBucket(entry) { return entry.bucket || defaultBucket(entry.kind); }
+    function monthBucketSpend(monthKey, bucket) {
+      if (bucket === "folga") {
+        const committed = state.items.filter((entry) => entry.kind !== "income" && itemBucket(entry) !== "folga").reduce((total, entry) => total + Number(entry.amounts[monthKey] || 0), 0);
+        return Math.max(0, monthIncome(monthKey) - committed);
+      }
+      return state.items.filter((e) => e.kind !== "income" && itemBucket(e) === bucket).reduce((t, e) => t + Number(e.amounts[monthKey] || 0), 0);
+    }
+    function monthBucketActual(monthKey, bucket) {
+      const items = state.items.filter((entry) => entry.kind !== "income" && !entry.cardId && itemBucket(entry) === bucket).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
+      const cards = state.cards.reduce((total, card) => {
+        const invoice = cardFatura(card.id, monthKey);
+        const paid = Number(state.cardPaid[card.id] && state.cardPaid[card.id][monthKey] || 0);
+        if (invoice <= 0 || paid <= 0) return total;
+        const bucketValue = state.items.filter((entry) => entry.cardId === card.id && itemBucket(entry) === bucket).reduce((sum, entry) => sum + Number(entry.amounts[monthKey] || 0), 0);
+        return total + paid * bucketValue / invoice;
+      }, 0);
+      return items + cards;
+    }
+    function monthProjectedResult(monthKey) { return monthIncome(monthKey) - state.items.filter((entry) => entry.kind !== "income").reduce((total, entry) => total + Number(entry.amounts[monthKey] || 0), 0); }
+    function monthActualResult(monthKey) { return monthActualIncome(monthKey) - monthActualExpenses(monthKey); }
+    function monthActualCash(monthKey) {
+      let cash = Number(state.openingCash || 0);
+      for (const month of state.months) {
+        cash += monthActualResult(month.key);
+        if (month.key === monthKey) break;
+      }
+      return cash;
+    }
+    function monthProximity(monthKey) { const inc = monthIncome(monthKey); if (inc <= 0) return null; const fora = monthBucketSpend(monthKey, "fora"); return Math.max(0, Math.min(1, (inc - fora) / inc)); }
+    function labelForMonth(monthKey) { const f = state.months.find((m) => m.key === monthKey); return f ? f.label : monthKey; }
+    function budgetMonthKey() { return state.budgetMonth && state.months.some((m) => m.key === state.budgetMonth) ? state.budgetMonth : state.months[state.months.length - 1].key; }
+
+    /* ---------- render orchestration ---------- */
+    function render() {
+      ensureBudgetFields(state);
+      updateActiveTab();
+      document.getElementById("openingCashInput").value = state.openingCash || 0;
+      populateMonthSelects();
+      syncComposerUi();
+      renderWorkspace();
+      saveState();
+    }
+
+    function updateActiveTab() {
+      document.querySelectorAll("#tabs button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === state.view)));
+    }
+
+    function renderWorkspace() {
+      const ws = document.getElementById("workspace");
+      ws.innerHTML = state.view === "budget" ? budgetView()
+        : state.view === "cards" ? cardsView()
+        : state.view === "debts" ? debtsView()
+        : monthsView();
+    }
+
+    /* ---------- budget view ---------- */
+    function budgetView() {
+      const months = state.months;
+      const selected = budgetMonthKey();
+      state.budgetMonth = selected;
+      const income = monthIncome(selected);
+      const potes = bucketOrder();
+      const targetTotal = potes.reduce((total, bucket) => total + Number(state.targets[bucket] || 0), Number(state.targets.fora || 0));
+      return `<div class="card budget">
+        <div class="section-head">
+          <h2 class="panel-title">Divisão do mês vs ideal</h2>
+          <label class="month-pick">Mês <select onchange="setBudgetMonth(this.value)">${months.map((m) => `<option value="${m.key}" ${m.key === selected ? "selected" : ""}>${m.label}</option>`).join("")}</select></label>
+        </div>
+        <div class="targets-row">
+          ${potes.map((b) => `<label>${bucketLabel(b)}<input type="number" step="1" min="0" value="${state.targets[b] || 0}" ${b === "folga" ? "readonly title=\"Calculado para o ideal fechar 100%\"" : `onchange="updateTarget('${b}', this.value)"`} /></label>`).join("")}
+          <span class="targets-total ${Math.abs(targetTotal - 100) < 0.1 ? "ok" : "bad"}">= ${targetTotal.toFixed(0)}%</span>
+          <label class="debt-target">Ideal dívida<input type="number" step="1" min="0" max="100" value="${state.targets.fora || 0}" onchange="updateTarget('fora', this.value)" /></label>
+        </div>
+        <div class="potes">
+          ${potes.map((b) => poteRow(b, selected, income)).join("")}
+          ${foraRow(selected, income)}
+        </div>
+        <div class="traj">
+          <div class="panel-title">Trajetória da proximidade</div>
+          <div class="bars">${months.map((m) => trajCol(m, selected)).join("")}</div>
+        </div>
+      </div>`;
+    }
+
+    function poteRow(bucket, monthKey, income) {
+      const projected = bucket === "folga" ? monthProjectedResult(monthKey) : monthBucketSpend(monthKey, bucket);
+      const actual = bucket === "folga" ? monthActualResult(monthKey) : monthBucketActual(monthKey, bucket);
+      const idealPct = Number(state.targets[bucket] || 0);
+      const idealVal = income * idealPct / 100;
+      const projectedPct = income > 0 ? projected / income * 100 : 0;
+      const actualIncome = monthActualIncome(monthKey);
+      const actualPct = actualIncome > 0 ? actual / actualIncome * 100 : 0;
+      const amberFor = ["necessidades", "lazer", "educacao", "folga"];
+      const variance = projected - idealVal;
+      const over = variance > 0.01 && amberFor.includes(bucket);
+      return `<div class="pote ${over ? "over" : "good"}">
+        <div class="name"><i></i>${bucketLabel(bucket)}</div>
+        <div class="track"><div class="fill" style="width:${Math.max(0, Math.min(actualPct, 100))}%"></div><div class="ideal-tick" data-l="projetado ${projectedPct.toFixed(1)}%" style="left:${Math.max(0, Math.min(projectedPct, 100))}%"><span class="knob"></span></div><div class="ideal-tick ideal-guide" data-l="ideal ${idealPct.toFixed(1)}%" style="left:${Math.max(0, Math.min(idealPct, 100))}%"><span class="knob"></span></div></div>
+        <div class="nums"><b>Proj. ${money(projected)}</b> · ${projectedPct.toFixed(0)}%<span class="actual-num">Real. ${money(actual)} · ${actualPct.toFixed(0)}%</span><span>Ideal ${money(idealVal)} · ${idealPct}% · ${variance > 0.01 ? `${money(variance)} acima` : variance < -0.01 ? `${money(Math.abs(variance))} abaixo` : "no ideal"}</span></div>
+      </div>`;
+    }
+
+    function foraRow(monthKey, income) {
+      const fora = monthBucketSpend(monthKey, "fora");
+      const actual = monthBucketActual(monthKey, "fora");
+      const pct = income > 0 ? fora / income * 100 : 0;
+      const actualIncome = monthActualIncome(monthKey);
+      const actualPct = actualIncome > 0 ? actual / actualIncome * 100 : 0;
+      const alvoPct = Number(state.targets.fora || 0);
+      const alvoVal = income * alvoPct / 100;
+      const variance = fora - alvoVal;
+      const within = variance <= 0.01;
+      const hint = alvoPct <= 0 ? "sem ideal" : within ? "dentro do ideal" : "acima do ideal";
+      return `<div class="pote fora">
+        <div class="name"><i></i>Dívidas & travados <span class="fora-flag ${within ? "ok" : ""}">${hint}</span></div>
+        <div class="track"><div class="fill" style="width:${Math.min(actualPct, 100)}%"></div><div class="ideal-tick" data-l="projetado ${pct.toFixed(1)}%" style="left:${Math.min(pct, 100)}%"><span class="knob"></span></div><div class="ideal-tick ideal-guide" data-l="ideal ${alvoPct.toFixed(1)}%" style="left:${Math.min(alvoPct, 100)}%"><span class="knob"></span></div></div>
+        <div class="nums"><b>Proj. ${money(fora)}</b> · ${pct.toFixed(0)}%<span class="actual-num">Real. ${money(actual)} · ${actualPct.toFixed(0)}%</span><span>Ideal ${money(alvoVal)} · ${alvoPct}% · ${variance > 0.01 ? `${money(variance)} acima` : variance < -0.01 ? `${money(Math.abs(variance))} abaixo` : "no ideal"}</span></div>
+      </div>`;
+    }
+
+    function trajCol(month, selectedKey) {
+      const prox = monthProximity(month.key);
+      const h = prox == null ? 0 : Math.max(4, prox * 100);
+      const dim = month.key !== selectedKey;
+      return `<div class="bar-col ${dim ? "dim" : ""}" onclick="setBudgetMonth('${month.key}')" title="Ver ${month.label}"><div class="bar" style="height:${h}%"><b>${prox == null ? "—" : Math.round(prox * 100) + "%"}</b></div><small>${month.label.split("/")[0]}</small></div>`;
+    }
+
+    function setBudgetMonth(monthKey) { state.budgetMonth = monthKey; render(); }
+    function updateTarget(bucket, rawValue) {
+      if (bucket === "folga") return;
+      const otherTotal = bucketOrder().filter((name) => name !== "folga" && name !== bucket).reduce((total, name) => total + Number(state.targets[name] || 0), bucket === "fora" ? 0 : Number(state.targets.fora || 0));
+      const available = Math.max(0, 100 - otherTotal);
+      state.targets[bucket] = Math.min(available, Math.max(0, numberValue(rawValue)));
+      const fixedTotal = bucketOrder().filter((name) => name !== "folga").reduce((total, name) => total + Number(state.targets[name] || 0), Number(state.targets.fora || 0));
+      state.targets.folga = Math.max(0, 100 - fixedTotal);
+      render();
+    }
+    function updateItemBucket(itemId, bucket) { const e = state.items.find((c) => c.id === itemId); if (!e) return; e.bucket = bucket; render(); }
+    function updateTargetRate(rawValue) { state.targetRate = Math.max(0, numberValue(rawValue)); render(); }
+
+    /* ---------- cards view ---------- */
+    function cardPurchases(cardId) { return state.items.filter((e) => e.cardId === cardId); }
+    function cardFatura(cardId, monthKey) { return cardPurchases(cardId).reduce((t, e) => t + Number(e.amounts[monthKey] || 0), 0); }
+    function cardCommitted(cardId) {
+      return cardPurchases(cardId).reduce((total, entry) => {
+        if (entry.recurring) return total + Number(entry.recurring.amount || 0);
+        return total + Object.values(entry.amounts || {}).reduce((sum, value) => sum + Number(value || 0), 0);
+      }, 0);
+    }
+
+    function cardsView() {
+      const cards = state.cards;
+      return `<div class="card cards-view">
+        <div class="section-head"><h2 class="panel-title">Cartões de crédito</h2></div>
+        <div class="addcard">
+          <input id="cardName" class="input" placeholder="Nome do cartão (ex: Nubank)" />
+          <div class="money-field" style="max-width:150px"><input id="cardLimit" class="input" type="number" step="0.01" placeholder="limite" /></div>
+          <button class="btn-primary" style="min-height:42px;padding:0 16px" type="button" onclick="addCard()">＋ Cartão</button>
+        </div>
+        ${cards.length ? cards.map((c) => cardBlock(c)).join("") : `<div class="empty">Nenhum cartão ainda. Adicione um acima e lance compras parceladas nele — cada parcela cai no seu pote e soma na fatura.</div>`}
+      </div>`;
+    }
+
+    function cardBlock(card) {
+      const committed = cardCommitted(card.id);
+      const limit = Number(card.limit || 0);
+      const usePct = limit > 0 ? Math.min(100, committed / limit * 100) : 0;
+      const overLimit = limit > 0 && committed > limit;
+      const purchases = cardPurchases(card.id);
+      const months = state.months;
+      const faturas = months.map((m) => cardFatura(card.id, m.key));
+      const maxF = Math.max(1, ...faturas);
+      return `<section class="card-block">
+        <header>
+          <div><strong>${card.name}</strong><span>comprometido ${money(committed)}${limit ? ` de ${money(limit)}` : ""}${overLimit ? ' <b class="over-l">acima do limite</b>' : ""}</span></div>
+          <button class="minibtn danger" type="button" title="Remover cartão" onclick="deleteCard('${card.id}')">×</button>
+        </header>
+        ${limit ? `<div class="track cardtrack"><div class="fill ${overLimit ? "cardover" : ""}" style="width:${usePct}%"></div></div>` : ""}
+        <div class="cardfaturas">
+          ${months.map((m, i) => `<div class="cf-col"><div class="cf-bar" style="height:${faturas[i] > 0 ? Math.max(6, faturas[i] / maxF * 70) : 0}px"></div><span>${m.label.split("/")[0]}</span><small>${faturas[i] ? money(faturas[i]) : "—"}</small></div>`).join("")}
+        </div>
+        <div class="addpurchase">
+          <input class="input pu-name" placeholder="Compra (ex: Notebook)" />
+          <select class="input pu-mode" onchange="togglePurchaseMode(this)"><option value="installment">Parcelada</option><option value="recurring">Recorrente</option></select>
+          <div class="money-field"><input class="input pu-total" type="number" step="0.01" placeholder="total" /></div>
+          <input class="input pu-n" type="number" min="1" step="1" value="1" title="parcelas" />
+          <select class="input pu-start">${months.map((m) => `<option value="${m.key}">${m.label}</option>`).join("")}</select>
+          <select class="input pu-bucket">${bucketOrder().map((b) => `<option value="${b}">${bucketLabel(b)}</option>`).join("")}</select>
+          <button class="ghost" type="button" onclick="addCardPurchase('${card.id}', this)">Lançar</button>
+        </div>
+        ${purchases.length ? `<div class="pu-list">${purchases.map(cardPurchaseRow).join("")}</div>` : ""}
+      </section>`;
+    }
+    function cardPurchaseRow(entry) {
+      const value = entry.recurring ? Number(entry.recurring.amount || 0) : Object.values(entry.amounts).reduce((total, amount) => total + Number(amount || 0), 0);
+      const monthKeys = Object.keys(entry.amounts || {}).sort();
+      const startKey = entry.recurring ? entry.recurring.start : monthKeys[0] || state.months[0].key;
+      const installments = Math.max(1, monthKeys.length || 1);
+      const recurring = Boolean(entry.recurring);
+      if (cardEditId === entry.id) return `<div class="pu-row editing"><input class="pu-edit edit-name" value="${attr(entry.name)}" title="Nome" /><select class="pu-edit edit-mode" title="Tipo" onchange="toggleCardEditMode(this)"><option value="installment" ${recurring ? "" : "selected"}>Parcelada</option><option value="recurring" ${recurring ? "selected" : ""}>Recorrente</option></select><select class="pu-edit edit-bucket" title="Pote">${bucketOptions(itemBucket(entry))}</select><select class="pu-edit edit-start" title="Mês inicial">${state.months.map((month) => `<option value="${month.key}" ${month.key === startKey ? "selected" : ""}>${month.label}</option>`).join("")}</select><input class="pu-edit edit-n" type="number" min="1" step="1" value="${installments}" title="Número de parcelas" style="display:${recurring ? "none" : "block"}" /><div class="pu-value-wrap"><input class="pu-edit edit-value" type="number" min="0" step="0.01" value="${value}" title="${recurring ? "Valor mensal" : "Valor total"}" /><small>${recurring ? "/mês" : "total"}</small></div><button class="minibtn" type="button" title="Salvar" onclick="saveCardPurchaseEdit('${entry.id}', this)">✓</button><button class="minibtn danger" type="button" title="Cancelar" onclick="cancelCardPurchaseEdit()">×</button></div>`;
+      return `<div class="pu-row"><span class="pu-nm">${entry.name}${entry.recurring ? ` <span class="badge">recorrente</span>` : ""}</span><span class="pu-b">${bucketLabel(itemBucket(entry))}</span><span class="pu-v">${entry.recurring ? `${money(value)}/mês` : money(value)}</span><button class="minibtn" type="button" title="Editar" onclick="editCardPurchase('${entry.id}')">✎</button><button class="minibtn danger" type="button" title="Excluir" onclick="deleteItem('${entry.id}')">×</button></div>`;
+    }
+
+    function addCard() {
+      const name = document.getElementById("cardName").value.trim();
+      if (!name) return;
+      const limit = numberValue(document.getElementById("cardLimit").value);
+      state.cards.push({ id: `card-${Date.now()}`, name, limit });
+      render();
+    }
+    function deleteCard(id) {
+      const c = state.cards.find((x) => x.id === id);
+      if (!c) return;
+      if (!confirm(`Remover ${c.name}? As compras dele viram saídas normais.`)) return;
+      state.items.forEach((e) => { if (e.cardId === id) e.cardId = null; });
+      state.cards = state.cards.filter((x) => x.id !== id);
+      render();
+    }
+    function addCardPurchase(cardId, btn) {
+      const root = btn.closest(".addpurchase");
+      const name = root.querySelector(".pu-name").value.trim();
+      const total = numberValue(root.querySelector(".pu-total").value);
+      const mode = root.querySelector(".pu-mode").value;
+      const n = Math.max(1, Math.round(numberValue(root.querySelector(".pu-n").value) || 1));
+      const startKey = root.querySelector(".pu-start").value;
+      const bucket = root.querySelector(".pu-bucket").value;
+      if (!name || total <= 0) return;
+      const amounts = {};
+      const idx = state.months.findIndex((m) => m.key === startKey);
+      if (mode === "recurring") {
+        for (let i = idx; i < state.months.length; i++) amounts[state.months[i].key] = total;
+        const entry = item(`buy-${Date.now()}`, name, "expense", amounts, bucket, cardId);
+        entry.recurring = { start: startKey, amount: total };
+        state.items.push(entry);
+      } else {
+        const parcela = Math.round(total / n * 100) / 100;
+        for (let i = 0; i < n; i++) { const m = state.months[idx + i]; if (!m) break; amounts[m.key] = parcela; }
+        state.items.push(item(`buy-${Date.now()}`, n > 1 ? `${name} (${n}x)` : name, "expense", amounts, bucket, cardId));
+      }
+      render();
+    }
+    function togglePurchaseMode(select) {
+      const root = select.closest(".addpurchase");
+      const recurring = select.value === "recurring";
+      const installments = root.querySelector(".pu-n");
+      const amount = root.querySelector(".pu-total");
+      installments.style.display = recurring ? "none" : "block";
+      amount.placeholder = recurring ? "valor/mês" : "total";
+    }
+    function editCardPurchase(itemId) { cardEditId = itemId; render(); }
+    function cancelCardPurchaseEdit() { cardEditId = null; render(); }
+    function toggleCardEditMode(select) {
+      const row = select.closest(".pu-row");
+      const recurring = select.value === "recurring";
+      row.querySelector(".edit-n").style.display = recurring ? "none" : "block";
+      row.querySelector(".pu-value-wrap small").textContent = recurring ? "/mês" : "total";
+      row.querySelector(".edit-value").title = recurring ? "Valor mensal" : "Valor total";
+    }
+    function saveCardPurchaseEdit(itemId, button) {
+      const entry = state.items.find((item) => item.id === itemId && item.cardId);
+      const row = button.closest(".pu-row");
+      const name = row.querySelector(".edit-name").value.trim();
+      const value = Math.max(0, numberValue(row.querySelector(".edit-value").value));
+      const mode = row.querySelector(".edit-mode").value;
+      const startKey = row.querySelector(".edit-start").value;
+      const installments = Math.max(1, Math.round(numberValue(row.querySelector(".edit-n").value) || 1));
+      if (!entry || !name || value <= 0) return;
+      entry.name = name;
+      entry.bucket = row.querySelector(".edit-bucket").value;
+      entry.amounts = {};
+      if (mode === "recurring") {
+        entry.recurring = { start: startKey, amount: value };
+        state.months.forEach((month) => {
+          if (month.key >= startKey) entry.amounts[month.key] = value;
+        });
+      } else {
+        delete entry.recurring;
+        const startIndex = state.months.findIndex((month) => month.key === startKey);
+        const activeMonths = state.months.slice(startIndex, startIndex + installments);
+        const installment = Math.floor(value / installments * 100) / 100;
+        activeMonths.forEach((month, index) => {
+          entry.amounts[month.key] = index === activeMonths.length - 1 ? Math.round((value - installment * (activeMonths.length - 1)) * 100) / 100 : installment;
+        });
+      }
+      entry.actuals = Object.fromEntries(Object.entries(entry.actuals || {}).filter(([monthKey]) => entry.amounts[monthKey] != null));
+      entry.done = Object.fromEntries(Object.entries(entry.done || {}).filter(([monthKey]) => entry.amounts[monthKey] != null));
+      syncCardPaid(entry.cardId);
+      cardEditId = null;
+      render();
+    }
+    function syncCardPaid(cardId) {
+      if (!state.cardPaid[cardId]) return;
+      state.months.forEach((month) => {
+        const invoice = cardFatura(cardId, month.key);
+        const paid = Number(state.cardPaid[cardId][month.key] || 0);
+        if (invoice <= 0 || paid <= 0) delete state.cardPaid[cardId][month.key];
+        else state.cardPaid[cardId][month.key] = Math.min(paid, invoice);
+      });
+    }
+
+    /* ---------- debt payments ---------- */
+    function addDebt() {
+      const d = { id: `debt-${Date.now()}`, name: "Nova dívida", full: 0, payable: 0, status: "", plan: { n: 1, start: null } };
+      state.oldDebts.unshift(d);
+      state.openDebt = d.id;
+      render();
+    }
+    function deleteDebt(id) {
+      const d = state.oldDebts.find((x) => x.id === id);
+      if (!d) return;
+      if (!confirm(`Excluir ${d.name}?`)) return;
+      state.oldDebts = state.oldDebts.filter((x) => x.id !== id);
+      state.items = state.items.filter((x) => x.id !== `pay-${id}`);
+      render();
+    }
+    function updateDebtPlan(id, field, value) {
+      const d = state.oldDebts.find((x) => x.id === id);
+      if (!d) return;
+      if (!d.plan) d.plan = { n: 1, start: null };
+      d.plan[field] = field === "start" ? value : Math.max(1, Math.round(numberValue(value)) || 1);
+      render();
+    }
+    function scheduleDebtPayment(id) {
+      const d = state.oldDebts.find((x) => x.id === id);
+      if (!d || !(d.payable > 0)) { alert("Preencha o valor a pagar primeiro."); return; }
+      const plan = d.plan || { n: 1, start: null };
+      const start = plan.start && state.months.some((m) => m.key === plan.start) ? plan.start : state.months[0].key;
+      const n = Math.max(1, Math.round(plan.n || 1));
+      const parcela = Math.round(d.payable / n * 100) / 100;
+      const amounts = {};
+      const idx = state.months.findIndex((m) => m.key === start);
+      for (let i = 0; i < n; i++) { const m = state.months[idx + i]; if (!m) break; amounts[m.key] = parcela; }
+      const existing = state.items.find((x) => x.id === `pay-${id}`);
+      const name = `Pagamento ${d.name}`;
+      if (existing) { existing.name = name; existing.kind = "debt"; existing.bucket = "fora"; existing.cardId = null; existing.amounts = amounts; }
+      else state.items.push(item(`pay-${id}`, name, "debt", amounts, "fora"));
+      render();
+    }
+    function clearDebtPayment(id) {
+      state.items = state.items.filter((x) => x.id !== `pay-${id}`);
+      render();
+    }
+
+    function setOpenDebt(id) { state.openDebt = id; }
+
+    /* ---------- months view ---------- */
+    function poteColor(b) {
+      return ({ necessidades: "#2a78d6", lazer: "#eb6834", educacao: "#6a4fb0", liberdade: "#0ca30c", reserva: "#1baf7a", folga: "#8b918a", fora: "#d03b3b" })[b] || "#8b918a";
+    }
+
+    function monthsView() {
+      const totals = monthTotals();
+      const selKey = state.monthSel && state.months.some((m) => m.key === state.monthSel) ? state.monthSel : state.months[0].key;
+      state.monthSel = selKey;
+      const sel = totals.find((t) => t.month.key === selKey) || totals[0];
+      const dc = monthDoneCount(selKey);
+      return `<div class="months2">
+        <div class="mstrip">
+          ${totals.map((t) => `<button class="mchip ${t.month.key === selKey ? "active" : ""}" type="button" onclick="setMonthSel('${t.month.key}')">
+            <span class="mc-label">${t.month.label}</span>
+            <span class="mc-cash ${t.cash < 0 ? "neg" : "pos"}">${money(t.cash)}</span>
+          </button>`).join("")}
+        </div>
+        <div class="card mpanel">
+          <div class="mpanel-head">
+            <div><div class="mp-title">${sel.month.label}</div><div class="mp-sub">caixa projetado ${money(sel.cash)} · realizado ${money(monthActualCash(selKey))}${dc.total ? ` · <b class="donecount ${dc.done === dc.total ? "all" : ""}">${dc.done}/${dc.total} feitos${dc.partial ? ` · ${dc.partial} parciais` : ""}</b>` : ""}</div></div>
+            <div class="mp-result ${sel.result < 0 ? "neg" : "pos"}">${sel.result >= 0 ? "+" : ""}${money(sel.result)}</div>
+          </div>
+          <div class="mstats">
+            ${mstatCompare("Entradas", sel.income, monthActualIncome(selKey))}
+            ${mstatCompare("Saídas", sel.expenses, monthActualExpenses(selKey))}
+            ${mstatCompare("Resultado", sel.result, monthActualResult(selKey))}
+            ${mstatCompare("Caixa acumulado", sel.cash, monthActualCash(selKey))}
+          </div>
+          ${allocBar(selKey)}
+          <div class="mlists">
+            ${mList(selKey, "Entradas", "income")}
+            ${mList(selKey, "Saídas", "expense")}
+            ${mCardsList(selKey)}
+            ${mList(selKey, "Dívidas", "debt")}
+            ${mList(selKey, "Reserva", "saving")}
+            ${sel.income === 0 && sel.expenses === 0 ? `<div class="empty">Nada lançado em ${sel.month.label}. Use o "Lançar" na lateral ou o gasto do dia abaixo.</div>` : ""}
+          </div>
+          ${dayAdder(selKey)}
+        </div>
+      </div>`;
+    }
+
+    function dayAdder(monthKey) {
+      return `<div class="dayadd">
+        <span class="dayadd-label">＋ gasto do dia</span>
+        <input class="input da-name" placeholder="O que foi? (ex: farmácia)" />
+        <div class="money-field"><input class="input da-val" type="number" step="0.01" inputmode="decimal" placeholder="valor" /></div>
+        <select class="input da-bucket">${bucketOrder().map((b) => `<option value="${b}" ${b === "necessidades" ? "selected" : ""}>${bucketLabel(b)}</option>`).join("")}</select>
+        <button class="da-btn" type="button" onclick="addDayExpense('${monthKey}', this)">Lançar</button>
+      </div>`;
+    }
+
+    function addDayExpense(monthKey, btn) {
+      const root = btn.closest(".dayadd");
+      const name = root.querySelector(".da-name").value.trim();
+      const val = numberValue(root.querySelector(".da-val").value);
+      const bucket = root.querySelector(".da-bucket").value;
+      if (!name || val <= 0) { root.querySelector(".da-name").focus(); return; }
+      const entry = item(`day-${Date.now()}`, name, "expense", { [monthKey]: val }, bucket);
+      entry.actuals[monthKey] = val;
+      entry.done[monthKey] = true;
+      state.items.push(entry);
+      render();
+    }
+
+    function mstat(label, value, cls) {
+      return `<div class="mstat"><span>${label}</span><b class="${cls}">${money(value)}</b></div>`;
+    }
+    function mstatCompare(label, projected, actual) {
+      return `<div class="mstat"><span>${label}</span><div class="compare"><div><small>Projetado</small><b class="${projected < 0 ? "neg" : "pos"}">${money(projected)}</b></div><div><small>Realizado</small><b class="${actual < 0 ? "neg" : "pos"}">${money(actual)}</b></div></div></div>`;
+    }
+
+    function allocBar(monthKey) {
+      const potes = [...bucketOrder(), "fora"];
+      const vals = potes.map((b) => ({ b, v: monthBucketSpend(monthKey, b) })).filter((x) => x.v > 0);
+      const total = vals.reduce((t, x) => t + x.v, 0);
+      if (total <= 0) return "";
+      return `<div class="alloc">
+        <div class="alloc-head">Pra onde vai o dinheiro do mês</div>
+        <div class="alloc-bar">${vals.map((x) => `<div class="alloc-seg" style="width:${x.v / total * 100}%;background:${poteColor(x.b)}" title="${bucketLabel(x.b)}: ${money(x.v)}"></div>`).join("")}</div>
+        <div class="alloc-legend">${vals.map((x) => `<span class="al-item"><i style="background:${poteColor(x.b)}"></i>${bucketLabel(x.b)} <b>${money(x.v)}</b></span>`).join("")}</div>
+      </div>`;
+    }
+
+    function mList(monthKey, label, kind) {
+      const entries = state.items.filter((e) => e.kind === kind && !e.cardId && Number(e.amounts[monthKey] || 0) !== 0).sort((a, b) => Number(b.amounts[monthKey] || 0) - Number(a.amounts[monthKey] || 0));
+      if (!entries.length) return "";
+      return `<section class="mlist"><h3>${label}</h3>${entries.map((e) => mRow(e, monthKey)).join("")}</section>`;
+    }
+
+    function mRow(entry, monthKey) {
+      const canBucket = entry.kind === "expense" || entry.kind === "saving";
+      const b = itemBucket(entry);
+      const projected = Number(entry.amounts[monthKey] || 0);
+      const actual = Number(entry.actuals && entry.actuals[monthKey] || 0);
+      const done = projected > 0 && actual >= projected - 0.01;
+      const partial = actual > 0.01 && !done;
+      const lead = canBucket
+        ? `<span class="pill-wrap" style="--pc:${poteColor(b)}"><select class="pote-pill" title="Pote no orçamento" onchange="updateItemBucket('${entry.id}', this.value)">${bucketOptions(b)}</select></span>`
+        : `<span class="kind-dot ${entry.kind}" title="${kindLabel(entry.kind)}"></span>`;
+      return `<div class="mrow ${done ? "done" : partial ? "partial" : ""}">
+        <button class="rowcheck ${done ? "on" : partial ? "partial" : ""}" type="button" title="${done ? "Feito (clique pra desmarcar)" : partial ? "Parcial (clique para completar)" : "Marcar como feito"}" onclick="toggleDone('${entry.id}', '${monthKey}')">${done ? "✓" : partial ? "–" : ""}</button>
+        ${lead}
+        <span class="mrow-name">${entry.name}</span>
+        <div class="money-mini" data-label="projetado"><input class="mrow-val" type="number" step="0.01" inputmode="decimal" value="${entry.amounts[monthKey] || ""}" onchange="updateAmount('${entry.id}', '${monthKey}', this.value)" /></div>
+        <div class="money-mini" data-label="realizado"><input class="mrow-val" type="number" step="0.01" inputmode="decimal" placeholder="—" value="${entry.actuals && entry.actuals[monthKey] != null ? entry.actuals[monthKey] : ""}" onchange="updateActual('${entry.id}', '${monthKey}', this.value)" /></div>
+        <div class="mrow-actions">
+          <button class="minibtn" type="button" title="Aplicar daqui pra frente" onclick="applyForward('${entry.id}', '${monthKey}')">→</button>
+          <button class="minibtn danger" type="button" title="Zerar neste mês" onclick="updateAmount('${entry.id}', '${monthKey}', 0)">×</button>
+        </div>
+      </div>`;
+    }
+
+    function mCardsList(monthKey) {
+      const lines = state.cards.map((c) => ({ c, total: cardFatura(c.id, monthKey) })).filter((x) => x.total !== 0).sort((a, b) => b.total - a.total);
+      if (!lines.length) return "";
+      return `<section class="mlist"><h3>Cartões</h3>${lines.map(({ c, total }) => {
+        const paid = Math.min(total, (state.cardPaid[c.id] && state.cardPaid[c.id][monthKey]) || 0);
+        const full = total > 0 && paid >= total - 0.01;
+        const partial = paid > 0.01 && !full;
+        const mark = full ? "✓" : partial ? "–" : "";
+        const rest = full ? "quitada" : partial ? `falta ${money(total - paid)}` : `fatura ${money(total)}`;
+        return `<div class="mrow cardrow ${full ? "done" : ""}">
+          <button class="rowcheck ${full ? "on" : partial ? "partial" : ""}" type="button" title="${full ? "Quitada (clique pra zerar o pago)" : "Marcar como quitada"}" onclick="toggleCardPaid('${c.id}', '${monthKey}')">${mark}</button>
+          <span class="kind-dot card"></span>
+          <span class="mrow-name">💳 ${c.name}<em>fatura ${money(total)}</em></span>
+          <div class="cardpay">
+            <div class="money-mini"><input class="mrow-val cp-in" type="number" step="0.01" inputmode="decimal" value="${paid || ""}" placeholder="pago" title="Quanto você já pagou desta fatura" onchange="updateCardPaid('${c.id}', '${monthKey}', this.value)" /></div>
+            <span class="cp-rest ${full ? "ok" : ""}">${rest}</span>
+          </div>
+        </div>`;
+      }).join("")}</section>`;
+    }
+
+    function monthDoneCount(monthKey) {
+      const items = state.items.filter((e) => !e.cardId && Number(e.amounts[monthKey] || 0) !== 0);
+      const cards = state.cards.filter((c) => cardFatura(c.id, monthKey) !== 0);
+      const total = items.length + cards.length;
+      const done = items.filter((entry) => Number(entry.actuals && entry.actuals[monthKey] || 0) >= Number(entry.amounts[monthKey] || 0) - 0.01).length + cards.filter((c) => { const p = (state.cardPaid[c.id] && state.cardPaid[c.id][monthKey]) || 0; return p >= cardFatura(c.id, monthKey) - 0.01; }).length;
+      const partial = items.filter((entry) => { const actual = Number(entry.actuals && entry.actuals[monthKey] || 0); return actual > 0.01 && actual < Number(entry.amounts[monthKey] || 0) - 0.01; }).length + cards.filter((card) => { const paid = Number(state.cardPaid[card.id] && state.cardPaid[card.id][monthKey] || 0); return paid > 0.01 && paid < cardFatura(card.id, monthKey) - 0.01; }).length;
+      return { done, partial, total };
+    }
+
+    function toggleDone(itemId, monthKey) {
+      const e = state.items.find((x) => x.id === itemId);
+      if (!e) return;
+      if (!e.done) e.done = {};
+      const projected = Number(e.amounts[monthKey] || 0);
+      const actual = Number(e.actuals[monthKey] || 0);
+      if (actual >= projected - 0.01) {
+        delete e.done[monthKey];
+        delete e.actuals[monthKey];
+      } else {
+        e.done[monthKey] = true;
+        e.actuals[monthKey] = projected;
+      }
+      render();
+    }
+    function toggleCardPaid(cardId, monthKey) {
+      const total = cardFatura(cardId, monthKey);
+      if (!state.cardPaid[cardId]) state.cardPaid[cardId] = {};
+      const cur = state.cardPaid[cardId][monthKey] || 0;
+      state.cardPaid[cardId][monthKey] = cur >= total - 0.01 ? 0 : total;
+      render();
+    }
+    function updateCardPaid(cardId, monthKey, raw) {
+      const total = cardFatura(cardId, monthKey);
+      let v = Math.max(0, numberValue(raw));
+      if (v > total) v = total;
+      if (!state.cardPaid[cardId]) state.cardPaid[cardId] = {};
+      state.cardPaid[cardId][monthKey] = v;
+      render();
+    }
+
+    function setMonthSel(key) { state.monthSel = key; render(); }
+
+    /* ---------- items view ---------- */
+    function itemsTable() {
+      return [
+        `<tr><th>Item</th>${state.months.map((m) => `<th>${m.label}</th>`).join("")}</tr>`,
+        sectionRow("Entradas"), ...itemRows("income"),
+        sectionRow("Saídas"), ...itemRows("expense"),
+        sectionRow("Dívidas no fluxo"), ...itemRows("debt"),
+        sectionRow("Reserva"), ...itemRows("saving")
+      ].join("");
+    }
+    function sectionRow(label) { return `<tr class="section-row"><td>${label}</td>${state.months.map(() => "<td></td>").join("")}</tr>`; }
+    function itemRows(kind) {
+      const rows = state.items.filter((e) => e.kind === kind).map((e) => editableRow(e));
+      return rows.length ? rows : [`<tr><td class="empty" colspan="${state.months.length + 1}">Sem itens</td></tr>`];
+    }
+    function editableRow(entry) {
+      return `<tr>
+        <td>
+          <div class="item-name">
+            <span class="pill ${entry.kind}">${kindLabel(entry.kind)}</span>
+            <span class="nm">${entry.name}</span>
+            ${entry.kind !== "income" ? `<select class="bucket-select" onchange="updateItemBucket('${entry.id}', this.value)">${bucketOptions(itemBucket(entry))}</select>` : ""}
+            <span class="item-actions">
+              <button class="minibtn" type="button" title="Renomear" onclick="renameItem('${entry.id}')">✎</button>
+              <button class="minibtn danger" type="button" title="Excluir" onclick="deleteItem('${entry.id}')">×</button>
+            </span>
+          </div>
+        </td>
+        ${state.months.map((m) => `<td><input class="cell-input" type="number" step="0.01" value="${entry.amounts[m.key] || ""}" onchange="updateAmount('${entry.id}', '${m.key}', this.value)" /></td>`).join("")}
+      </tr>`;
+    }
+    function kindLabel(kind) { return ({ income: "entrada", expense: "saída", debt: "dívida", saving: "reserva" })[kind] || kind; }
+
+    /* ---------- debts ---------- */
+    function debtsView() {
+      const debts = [...state.oldDebts].sort((a, b) => Number(b.payable || 0) - Number(a.payable || 0));
+      const full = state.oldDebts.reduce((t, e) => t + Number(e.full || 0), 0);
+      const payable = state.oldDebts.reduce((t, e) => t + Number(e.payable || 0), 0);
+      const scheduled = state.items.filter((x) => x.id.startsWith("pay-")).reduce((t, x) => t + Object.values(x.amounts).reduce((s, v) => s + Number(v || 0), 0), 0);
+      return `<div class="card debts-view">
+        <div class="section-head"><h2 class="panel-title">Dívidas — registrar e agendar</h2></div>
+        <div class="debt-summary">Total a pagar <b>${money(payable)}</b> · de ${money(full)} cheio · economia negociada ${money(full - payable)}${scheduled > 0 ? ` · <span class="sched-total">agendado ${money(scheduled)}</span>` : ""}</div>
+        <div class="debt-list">${debts.length ? debts.map((d) => debtCard(d)).join("") : `<div class="empty">Nenhuma dívida. Adicione uma abaixo.</div>`}</div>
+        <button class="ghost adddebt" type="button" onclick="addDebt()">＋ Dívida</button>
+      </div>`;
+    }
+
+    function debtCard(d) {
+      const discount = d.full ? 1 - d.payable / d.full : 0;
+      const plan = d.plan || { n: 1, start: null };
+      const start = plan.start && state.months.some((m) => m.key === plan.start) ? plan.start : state.months[0].key;
+      const n = Math.max(1, Math.round(plan.n || 1));
+      const parcela = n > 0 ? d.payable / n : d.payable;
+      const scheduled = state.items.find((x) => x.id === `pay-${d.id}`);
+      const schedInfo = scheduled ? `${Object.keys(scheduled.amounts).length}× ${money(Object.values(scheduled.amounts)[0] || 0)}` : "";
+      return `<details class="debt-line" ${d.id === state.openDebt ? "open" : ""} ontoggle="if(this.open)setOpenDebt('${d.id}')">
+        <summary>
+          <div><strong>${d.name}${scheduled ? ` <span class="badge pagar">agendado</span>` : ""}</strong><div class="sub">${d.status || "sem status"}${discount > 0.001 ? ` · desc. ${(discount * 100).toFixed(0)}%` : ""}</div></div>
+          <span class="pay">${money(d.payable)}</span>
+        </summary>
+        <div class="debt-body">
+          <label>Nome<input value="${d.name || ""}" onchange="updateDebt('${d.id}', 'name', this.value)" /></label>
+          <div class="debt-two">
+            <label>Saldo atualizado<input type="number" step="0.01" value="${d.full || ""}" onchange="updateDebt('${d.id}', 'full', this.value)" /></label>
+            <label>A pagar (negociado)<input type="number" step="0.01" value="${d.payable || ""}" onchange="updateDebt('${d.id}', 'payable', this.value)" /></label>
+          </div>
+          <label>Status<input value="${d.status || ""}" placeholder="Ex: Negativada, acordo Serasa..." onchange="updateDebt('${d.id}', 'status', this.value)" /></label>
+          <div class="pay-sched">
+            <div class="ps-title">Como vou pagar</div>
+            <div class="ps-row">
+              <label>Em quantas vezes<input type="number" min="1" step="1" value="${n}" onchange="updateDebtPlan('${d.id}','n',this.value)" /></label>
+              <label>A partir de<select onchange="updateDebtPlan('${d.id}','start',this.value)">${state.months.map((m) => `<option value="${m.key}" ${m.key === start ? "selected" : ""}>${m.label}</option>`).join("")}</select></label>
+              <div class="ps-parcela">${n}× de <b>${money(parcela)}</b></div>
+            </div>
+            <div class="ps-actions">
+              <button class="ps-apply" type="button" onclick="scheduleDebtPayment('${d.id}')">${scheduled ? "Atualizar no fluxo" : "Lançar no fluxo"}</button>
+              ${scheduled ? `<span class="ps-done">✓ agendado ${schedInfo} <button class="linkbtn" type="button" onclick="clearDebtPayment('${d.id}')">remover</button></span>` : ""}
+              <button class="minibtn danger deldebt" type="button" title="Excluir dívida" onclick="deleteDebt('${d.id}')">×</button>
+            </div>
+          </div>
+        </div>
+      </details>`;
+    }
+
+    function updateDebt(debtId, field, rawValue) {
+      const entry = state.oldDebts.find((c) => c.id === debtId);
+      if (!entry) return;
+      entry[field] = ["status", "name", "strategy"].includes(field) ? rawValue : numberValue(rawValue);
+      render();
+    }
+
+    /* ---------- item mutations ---------- */
+    function updateAmount(itemId, monthKey, rawValue) {
+      const entry = state.items.find((c) => c.id === itemId);
+      if (!entry) return;
+      const value = numberValue(rawValue);
+      if (value === 0) delete entry.amounts[monthKey]; else entry.amounts[monthKey] = value;
+      render();
+    }
+    function updateActual(itemId, monthKey, rawValue) {
+      const entry = state.items.find((item) => item.id === itemId);
+      if (!entry) return;
+      const value = numberValue(rawValue);
+      if (!entry.actuals) entry.actuals = {};
+      if (rawValue === "" || value === 0) delete entry.actuals[monthKey]; else entry.actuals[monthKey] = value;
+      if (!entry.done) entry.done = {};
+      if (entry.actuals[monthKey] != null && entry.actuals[monthKey] >= Number(entry.amounts[monthKey] || 0) - 0.01) entry.done[monthKey] = true;
+      else delete entry.done[monthKey];
+      render();
+    }
+    function applyForward(itemId, monthKey) {
+      const entry = state.items.find((c) => c.id === itemId);
+      if (!entry) return;
+      const value = Number(entry.amounts[monthKey] || 0);
+      state.months.forEach((m) => { if (m.key < monthKey) return; if (value === 0) delete entry.amounts[m.key]; else entry.amounts[m.key] = value; });
+      render();
+    }
+    function renameItem(itemId) {
+      const entry = state.items.find((c) => c.id === itemId);
+      if (!entry) return;
+      const next = prompt("Nome do item", entry.name);
+      if (!next || !next.trim()) return;
+      entry.name = next.trim(); render();
+    }
+    function deleteItem(itemId) {
+      const entry = state.items.find((c) => c.id === itemId);
+      if (!entry) return;
+      if (!confirm(`Excluir ${entry.name}?`)) return;
+      state.items = state.items.filter((c) => c.id !== itemId); render();
+    }
+
+    function addItem() {
+      const name = document.getElementById("nameInput").value.trim();
+      if (!name) { document.getElementById("nameInput").focus(); return; }
+      const kind = composerKind;
+      const frequency = document.getElementById("frequencyInput").value;
+      const amount = numberValue(document.getElementById("amountInput").value);
+      const startKey = document.getElementById("startInput").value;
+      const endKey = frequency === "oneoff" ? startKey : document.getElementById("endInput").value;
+      const bucket = kind === "income" ? null : composerBucket;
+      const amounts = {};
+      state.months.forEach((m) => { if (m.key < startKey || m.key > endKey) return; amounts[m.key] = amount; });
+      state.items.push(item(`${Date.now()}`, name, kind, amounts, bucket));
+      document.getElementById("nameInput").value = "";
+      document.getElementById("amountInput").value = "";
+      render();
+      document.getElementById("nameInput").focus();
+    }
+
+    function exportJson() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url; link.download = `financas-dashboard-${new Date().toISOString().slice(0, 10)}.json`; link.click();
+      URL.revokeObjectURL(url);
+    }
+    function importJson(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          if (!isValidData(parsed)) throw new Error("Arquivo invalido");
+          state = parsed; normalizeHorizon(state); ensureBudgetFields(state); render();
+        } catch { alert("Nao consegui importar esse JSON."); }
+      };
+      reader.readAsText(file);
+    }
+    function addNextMonth() {
+      const last = state.months[state.months.length - 1];
+      const [y, mo] = last.key.split("-");
+      const date = new Date(Number(y), Number(mo), 1);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      state.months.push({ key, label: monthLabel(key) });
+      state.items.forEach((entry) => {
+        if (entry.recurring && key >= entry.recurring.start) entry.amounts[key] = Number(entry.recurring.amount || 0);
+      });
+      populateMonthSelects(true);
+      render();
+    }
+
+    /* ---------- composer ui ---------- */
+    function populateMonthSelects(force) {
+      const start = document.getElementById("startInput");
+      const end = document.getElementById("endInput");
+      if (!force && start.options.length === state.months.length) return;
+      const options = state.months.map((m) => `<option value="${m.key}">${m.label}</option>`).join("");
+      const keepStart = start.value, keepEnd = end.value;
+      start.innerHTML = options; end.innerHTML = options;
+      start.value = keepStart || state.months[0].key;
+      end.value = keepEnd || state.months[state.months.length - 1].key;
+    }
+
+    function updateFrequencyUi() {
+      const frequency = document.getElementById("frequencyInput").value;
+      document.getElementById("endLabel").style.display = frequency === "oneoff" ? "none" : "grid";
+      document.getElementById("startLabelText").textContent = frequency === "oneoff" ? "Mês" : "Início";
+    }
+
+    function selectKind(kind) {
+      composerKind = kind;
+      if (kind === "income") composerBucket = null;
+      else if (kind === "debt") composerBucket = "fora";
+      else if (!composerBucket || composerBucket === "fora") composerBucket = "necessidades";
+      syncComposerUi();
+    }
+    function selectBucket(bucket) { composerBucket = bucket; syncComposerUi(); }
+
+    function syncComposerUi() {
+      document.querySelectorAll("#kindSeg button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.kind === composerKind)));
+      document.getElementById("bucketField").style.display = composerKind === "income" ? "none" : "grid";
+      document.querySelectorAll("#bucketChips button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.bucket === composerBucket)));
+      updateFrequencyUi();
+    }
+
+    /* ---------- wiring ---------- */
+    document.getElementById("addBtn").addEventListener("click", addItem);
+    ["nameInput", "amountInput"].forEach((id) => document.getElementById(id).addEventListener("keydown", (e) => { if (e.key === "Enter") addItem(); }));
+    document.getElementById("kindSeg").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) selectKind(b.dataset.kind); });
+    document.getElementById("bucketChips").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) selectBucket(b.dataset.bucket); });
+    document.getElementById("frequencyInput").addEventListener("change", updateFrequencyUi);
+    document.getElementById("connectFileBtn").addEventListener("click", connectPrivateJson);
+    document.getElementById("saveFileBtn").addEventListener("click", savePrivateJsonManually);
+    document.getElementById("openingCashInput").addEventListener("change", (e) => { state.openingCash = numberValue(e.target.value); render(); });
+    document.getElementById("ghConnectBtn").addEventListener("click", connectToken);
+    document.getElementById("ghPullBtn").addEventListener("click", () => cloudPull({}));
+    document.getElementById("addMonthBtn").addEventListener("click", addNextMonth);
+    document.getElementById("exportBtn").addEventListener("click", exportJson);
+    document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
+    document.getElementById("importFile").addEventListener("change", (e) => importJson(e.target.files[0]));
+    document.getElementById("resetBtn").addEventListener("click", () => { if (!confirm("Restaurar a base inicial e apagar mudanças locais?")) return; state = structuredClone(seed); normalizeHorizon(state); ensureBudgetFields(state); render(); });
+    document.getElementById("tabs").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; state.view = b.dataset.view; render(); });
+
+    // arrastar a marca do ideal na barra pra ajustar a meta (%)
+    (function initTargetDrag() {
+      const ws = document.getElementById("workspace");
+      let bucket = null, track = null, tickEl = null;
+      ws.addEventListener("pointerdown", (e) => {
+        const tick = e.target.closest(".ideal-tick.draggable");
+        if (!tick) return;
+        e.preventDefault();
+        bucket = tick.dataset.bucket;
+        if (bucket === "folga") return;
+        track = tick.closest(".track"); tickEl = tick;
+        tick.classList.add("dragging");
+        document.addEventListener("pointermove", onMove);
+        document.addEventListener("pointerup", onUp, { once: true });
+      });
+      function onMove(e) {
+        if (!track) return;
+        const rect = track.getBoundingClientRect();
+        const otherTotal = bucketOrder().filter((name) => name !== "folga" && name !== bucket).reduce((total, name) => total + Number(state.targets[name] || 0), bucket === "fora" ? 0 : Number(state.targets.fora || 0));
+        const available = Math.max(0, 100 - otherTotal);
+        const pct = Math.round(Math.max(0, Math.min(available, (e.clientX - rect.left) / rect.width * 100)));
+        state.targets[bucket] = pct;
+        const fixedTotal = bucketOrder().filter((name) => name !== "folga").reduce((total, name) => total + Number(state.targets[name] || 0), Number(state.targets.fora || 0));
+        state.targets.folga = Math.max(0, 100 - fixedTotal);
+        tickEl.style.left = pct + "%";
+        tickEl.dataset.l = "meta " + pct + "%";
+        const total = bucketOrder().reduce((t, b) => t + Number(state.targets[b] || 0), 0);
+        const tt = document.querySelector(".targets-total");
+        if (tt) { tt.textContent = "= " + total + "%"; tt.className = "targets-total " + (total === 100 ? "ok" : "bad"); }
+        const inp = document.querySelector('.targets-row input[data-bk="' + bucket + '"]');
+        if (inp) inp.value = pct;
+      }
+      function onUp() { document.removeEventListener("pointermove", onMove); if (tickEl) tickEl.classList.remove("dragging"); track = null; tickEl = null; render(); }
+    })();
+
+    render();
+    requestAnimationFrame(() => document.body.classList.add("booted"));
+
+    /* ---------- boot do sync ---------- */
+    if (ghToken()) cloudPull({});
+    else setCloudStatus("Sem token. Conecte pra sincronizar com o celular.");
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && ghToken() && !cloudBusy) cloudPull({});
+    });
+    window.addEventListener("online", () => { if (ghToken()) cloudPull({}); });
+
+    if (location.protocol.startsWith("http") && "serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    }
+  </script>
+</body>
+</html>
