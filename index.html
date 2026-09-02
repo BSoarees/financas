@@ -130,6 +130,11 @@
     .fold-body .ghost:hover { border-color: var(--ink-2); }
     .file-status { font-size: 12px; color: var(--muted); line-height: 1.4; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
     .file-status.connected { color: var(--good); border-color: var(--good-track); background: var(--good-soft); }
+    .setup-banner { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; padding: 14px 16px; border: 1px solid var(--accent); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-sm); }
+    .setup-banner[hidden] { display: none; }
+    .setup-banner strong { display: block; font-size: 14px; margin-bottom: 2px; }
+    .setup-banner span { font-size: 13px; color: var(--muted); line-height: 1.45; }
+
     .file-status.warn { color: var(--crit); border-color: var(--crit); background: var(--surface); }
 
     /* ---------- main ---------- */
@@ -619,6 +624,14 @@
     </aside>
 
     <main>
+      <div id="setupBanner" class="setup-banner" hidden>
+        <div>
+          <strong>Falta conectar este aparelho</strong>
+          <span>Seus dados estao no repositorio privado. Cole o token uma vez aqui pra carregar tudo e manter sincronizado com o celular.</span>
+        </div>
+        <button class="ghost" id="setupBannerBtn" type="button">Conectar agora</button>
+      </div>
+
       <div class="toolbar">
         <div class="tabs" id="tabs">
           <button type="button" data-view="budget">Orçamento</button>
@@ -951,18 +964,25 @@
       if (cloudPending) { cloudPending = false; queueCloudSave(); }
     }
 
+    function updateSetupBanner() {
+      const banner = document.getElementById("setupBanner");
+      if (banner) banner.hidden = Boolean(ghToken());
+    }
+
     function connectToken() {
       const input = document.getElementById("ghTokenInput");
       const value = input.value.trim();
       if (!value) {
         localStorage.removeItem(TOKEN_KEY);
         ghSha = null;
+        updateSetupBanner();
         setCloudStatus("Token removido. Este aparelho parou de sincronizar.");
         return;
       }
       localStorage.setItem(TOKEN_KEY, value);
       input.value = "";
       ghSha = null;
+      updateSetupBanner();
       cloudPull({});
     }
 
@@ -1783,8 +1803,19 @@
     requestAnimationFrame(() => document.body.classList.add("booted"));
 
     /* ---------- boot do sync ---------- */
+    updateSetupBanner();
     if (ghToken()) cloudPull({});
-    else setCloudStatus("Sem token. Conecte pra sincronizar com o celular.");
+    else {
+      setCloudStatus("Sem token. Conecte pra sincronizar com o celular.");
+      document.getElementById("syncFold").open = true;
+    }
+
+    document.getElementById("setupBannerBtn").addEventListener("click", () => {
+      const fold = document.getElementById("syncFold");
+      fold.open = true;
+      fold.scrollIntoView({ behavior: "smooth", block: "center" });
+      document.getElementById("ghTokenInput").focus();
+    });
 
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible" && ghToken() && !cloudBusy) cloudPull({});
