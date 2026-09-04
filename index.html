@@ -922,6 +922,7 @@
       const remoteAt = remote.updatedAt || "";
       const localAt = state.updatedAt || "";
       if (remoteAt && remoteAt === localAt) { setCloudStatus(`Em dia. Ultima checagem ${timeLabel(new Date())}.`, "ok"); return; }
+      if (!hasRealData(state) && hasRealData(remote)) { adoptRemote(remote); setCloudStatus(`Atualizado do repo ${timeLabel(new Date())}.`, "ok"); return; }
       if (localAt && (!remoteAt || localAt > remoteAt)) { setCloudStatus("Este aparelho esta na frente. Enviando..."); cloudPush(); return; }
       if (!localAt && hasRealData(state) && !opts.force) {
         const usarRemoto = confirm(["Este aparelho tem dados que nunca foram sincronizados.", "", "OK = usar a versao que esta no repositorio", "Cancelar = mandar a versao deste aparelho pro repositorio"].join("\n"));
