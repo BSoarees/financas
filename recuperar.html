@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Recuperar dados locais</title>
+<style>
+  body{font:15px/1.6 system-ui,-apple-system,Segoe UI,sans-serif;margin:0;padding:28px;
+       background:#f6f7f9;color:#16181d;max-width:760px}
+  h1{font-size:19px;margin:0 0 4px}
+  p.sub{color:#667085;margin:0 0 20px}
+  pre{background:#fff;border:1px solid #e3e6ea;border-radius:10px;padding:16px;white-space:pre-wrap;
+      font:13px/1.55 ui-monospace,Menlo,Consolas,monospace}
+  .ok{color:#0a7d4b;font-weight:700}.bad{color:#c02626;font-weight:700}
+  button{background:#16181d;color:#fff;border:0;border-radius:8px;padding:10px 16px;
+         font:inherit;font-weight:600;cursor:pointer;margin-top:12px}
+</style>
+</head>
+<body>
+<h1>Recuperar dados locais</h1>
+<p class="sub">Esta pagina le apenas o armazenamento do seu proprio navegador, nesta origem. Nada e enviado para a internet.</p>
+<pre id="out">lendo...</pre>
+<button id="dl">Baixar copia agora</button>
+<script>
+(function () {
+  var KEY = "crxate.financas.dashboard.v1";
+  var out = [], payload = { origin: location.origin, at: new Date().toISOString(), keys: {} };
+  function line(s) { out.push(s); document.getElementById("out").textContent = out.join("\n"); }
+  line("origem: " + location.origin);
+
+  var keys = [];
+  try { keys = Object.keys(localStorage).filter(function (k) { return k.indexOf("crxate.financas") === 0; }); }
+  catch (e) { line("localStorage bloqueado: " + e.message); }
+
+  keys.forEach(function (k) {
+    if (k.indexOf("token") !== -1) { line("[" + k + "] presente (nao copiado)"); return; }
+    var raw = localStorage.getItem(k);
+    payload.keys[k] = raw;
+    var d = null;
+    try { d = JSON.parse(raw); } catch (e) { line("[" + k + "] ILEGIVEL"); return; }
+    var soma = (d.items || []).reduce(function (s, it) {
+      return s + Object.keys(it.amounts || {}).reduce(function (x, m) { return x + Number(it.amounts[m] || 0); }, 0);
+    }, 0);
+    line("[" + k + "]  meses=" + (d.months || []).length + "  itens=" + (d.items || []).length +
+         "  cartoes=" + (d.cards || []).length + "  dividas=" + (d.oldDebts || []).length);
+    line("     updatedAt=" + (d.updatedAt || "(sem)") + "  soma=R$ " + soma.toFixed(2) + "  bytes=" + raw.length);
+  });
+
+  var body = JSON.stringify(payload);
+  fetch("http://127.0.0.1:8788/__recover", { method: "POST", mode: "no-cors",
+    headers: { "Content-Type": "text/plain" }, body: body })
+    .then(function () { line(""); line("enviado para o servidor local (127.0.0.1:8788)"); })
+    .catch(function (e) { line(""); line("nao consegui falar com o servidor local: " + e.message);
+                          line("use o botao abaixo para baixar a copia."); });
+
+  function baixar() {
+    var raw = localStorage.getItem(KEY);
+    if (!raw) { alert("Nao ha dados nesta origem."); return; }
+    var url = URL.createObjectURL(new Blob([raw], { type: "application/json" }));
+    var a = document.createElement("a");
+    a.href = url; a.download = "financas-recuperado-" + new Date().toISOString().slice(0, 10) + ".json";
+    a.click(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+  document.getElementById("dl").addEventListener("click", baixar);
+  setTimeout(baixar, 800);
+})();
+</script>
+</body>
+</html>
