@@ -292,7 +292,15 @@
     .mp-title { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
     .mp-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
     .mp-result { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
-    .mstats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .mstats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .account-balances { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+    .account-balance { padding: 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+    .account-balance span { display: block; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+    .account-balance b { display: block; margin-top: 5px; font-size: 18px; font-variant-numeric: tabular-nums; }
+    .account-balance small { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .account-balance.reserve { border-color: var(--good-track); background: var(--good-soft); }
+    .account-balance.free { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .account-balance.free span, .account-balance.free small { color: rgba(255,255,255,.62); }
     .mstat { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
     .mstat span { display: block; font-size: 11.5px; color: var(--muted); margin-bottom: 6px; }
     .mstat b { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -598,6 +606,7 @@
       .mchip { flex: 0 0 auto; min-width: 96px; }
       .mpanel { padding: 16px; }
       .mstats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .account-balances { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .mstat { min-width: 0; } .mstat b { font-size: clamp(14px, 4vw, 16px); }
       .mp-title { font-size: 18px; } .mp-result { font-size: 18px; }
 
@@ -1844,14 +1853,16 @@
             <div><div class="mp-title">${sel.month.label}</div><div class="mp-sub">saldo em conta ${money(sel.cash)} · reserva incluída ${money(monthReserveBalance(selKey))}${dc.total ? ` · <b class="donecount ${dc.done === dc.total ? "all" : ""}">${dc.done}/${dc.total} feitos${dc.partial ? ` · ${dc.partial} parciais` : ""}</b>` : ""}</div></div>
             <div class="mp-result ${sel.result < 0 ? "neg" : "pos"}">${sel.result >= 0 ? "+" : ""}${money(sel.result)}</div>
           </div>
+          <div class="account-balances">
+            <div class="account-balance"><span>Saldo em conta</span><b>${money(sel.cash)}</b><small>Realizado ${money(monthActualCash(selKey))}</small></div>
+            <div class="account-balance reserve"><span>Reserva acumulada</span><b>${money(monthReserveBalance(selKey))}</b><small>Está dentro do saldo em conta</small></div>
+            <div class="account-balance free"><span>Disponível livre</span><b>${money(sel.cash - monthReserveBalance(selKey))}</b><small>Conta menos reserva</small></div>
+            <div class="account-balance"><span>Investimentos</span><b>${money(monthInvestmentBalance(selKey))}</b><small>Fora da conta</small></div>
+          </div>
           <div class="mstats">
             ${mstatCompare("Entradas", sel.income, monthActualIncome(selKey))}
             ${mstatCompare("Saídas", sel.expenses, monthActualExpenses(selKey))}
             ${mstatCompare("Resultado em conta", sel.result, monthActualResult(selKey))}
-            ${mstatCompare("Saldo em conta", sel.cash, monthActualCash(selKey))}
-            ${mstatCompare("Saldo investimentos", monthInvestmentBalance(selKey), monthActualInvestmentBalance(selKey))}
-            ${mstatCompare("Saldo reserva", monthReserveBalance(selKey), monthActualReserveBalance(selKey))}
-            ${mstatCompare("Disponível livre", sel.cash - monthReserveBalance(selKey), monthActualCash(selKey) - monthActualReserveBalance(selKey))}
           </div>
           ${allocBar(selKey)}
           <div class="mlists">
@@ -2006,7 +2017,12 @@
       render();
     }
 
-    function setMonthSel(key) { state.monthSel = key; render(); }
+    function setMonthSel(key) {
+      state.monthSel = key;
+      render();
+      const start = document.getElementById("startInput");
+      if (start && state.months.some((month) => month.key === key)) start.value = key;
+    }
 
     /* ---------- items view ---------- */
     function itemsTable() {
@@ -2225,7 +2241,12 @@
       composerKind = kind;
       if (kind === "income") composerBucket = null;
       else if (kind === "debt") composerBucket = "fora";
-      else if (kind === "saving" || kind === "investment") composerBucket = "reserva";
+      else if (kind === "saving" || kind === "investment") {
+        composerBucket = "reserva";
+        document.getElementById("frequencyInput").value = "oneoff";
+        const selectedMonth = state.monthSel || budgetMonthKey();
+        if (state.months.some((month) => month.key === selectedMonth)) document.getElementById("startInput").value = selectedMonth;
+      }
       else if (!composerBucket || composerBucket === "fora") composerBucket = "necessidades";
       syncComposerUi();
     }
