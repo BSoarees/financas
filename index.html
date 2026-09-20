@@ -296,9 +296,10 @@
     .da-btn { min-height: 38px; padding: 0 18px; border: 0; background: var(--ink); color: #fff; border-radius: 10px; font-weight: 600; cursor: pointer; }
     .da-btn:hover { background: #2a322b; }
     .mlist h3 + .mrow { border-top: 0; }
-    .mrow-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+    .mrow-main { min-width: 0; display: grid; gap: 4px; justify-items: start; }
+    .mrow-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
     .mrow-name em { font-style: normal; font-size: 11px; color: var(--muted); margin-left: 8px; }
-    .payment-select { min-height: 25px; max-width: 150px; margin-left: 7px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); padding: 1px 7px; color: var(--ink-2); font-size: 10.5px; font-weight: 700; }
+    .payment-select { min-height: 27px; max-width: 180px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); padding: 1px 9px; color: var(--ink-2); font-size: 11px; font-weight: 700; }
     .money-mini { position: relative; justify-self: end; }
     .money-mini::after { content: attr(data-label); position: absolute; top: -9px; right: 8px; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
     .money-mini::before { content: "R$"; position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--muted); pointer-events: none; }
@@ -550,7 +551,9 @@
       .mrow > .rowcheck { grid-area: check; align-self: center; }
       .mrow > .pill-wrap { grid-area: lead; align-self: center; min-width: 0; max-width: 100%; }
       .mrow > .kind-dot { display: none; }
-      .mrow > .mrow-name { grid-area: name; align-self: center; white-space: normal; }
+      .mrow > .mrow-main { grid-area: name; align-self: center; min-width: 0; }
+      .mrow-main .mrow-name { white-space: normal; }
+      .payment-select { width: 100%; max-width: 210px; min-height: 30px; }
       .mrow > .money-mini:nth-of-type(1) { grid-area: projected; }
       .mrow > .money-mini:nth-of-type(2) { grid-area: actual; }
       .mrow > .mrow-actions { grid-area: actions; align-self: center; }
@@ -1708,7 +1711,7 @@
       return `<div class="mrow ${done ? "done" : partial ? "partial" : ""}">
         <button class="rowcheck ${done ? "on" : partial ? "partial" : ""}" type="button" title="${done ? "Feito (clique pra desmarcar)" : partial ? "Parcial (clique para completar)" : "Marcar como feito"}" onclick="toggleDone('${entry.id}', '${monthKey}')">${done ? "✓" : partial ? "–" : ""}</button>
         ${lead}
-        <span class="mrow-name">${entry.name}${entry.kind === "expense" ? `<select class="payment-select" title="Forma de pagamento" onchange="updatePaymentSource('${entry.id}',this.value)">${paymentOptions(entry.paymentSource || "cash")}</select>` : ""}</span>
+        <div class="mrow-main"><span class="mrow-name">${entry.name}</span>${entry.kind === "expense" ? `<select class="payment-select" title="Forma de pagamento" onchange="updatePaymentSource('${entry.id}',this.value)">${paymentOptions(entry.paymentSource || "cash")}</select>` : ""}</div>
         <div class="money-mini" data-label="projetado"><input class="mrow-val" type="number" step="0.01" inputmode="decimal" value="${entry.amounts[monthKey] || ""}" onchange="updateAmount('${entry.id}', '${monthKey}', this.value)" /></div>
         <div class="money-mini" data-label="realizado"><input class="mrow-val" type="number" step="0.01" inputmode="decimal" placeholder="—" value="${entry.actuals && entry.actuals[monthKey] != null ? entry.actuals[monthKey] : ""}" onchange="updateActual('${entry.id}', '${monthKey}', this.value)" /></div>
         <div class="mrow-actions">
