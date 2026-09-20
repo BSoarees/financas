@@ -292,11 +292,13 @@
     .dayadd .da-name { flex: 1 1 160px; }
     .dayadd .money-field { flex: 0 0 128px; }
     .dayadd .da-bucket { flex: 0 0 auto; max-width: 150px; }
+    .dayadd .da-source { flex: 0 0 auto; max-width: 170px; }
     .da-btn { min-height: 38px; padding: 0 18px; border: 0; background: var(--ink); color: #fff; border-radius: 10px; font-weight: 600; cursor: pointer; }
     .da-btn:hover { background: #2a322b; }
     .mlist h3 + .mrow { border-top: 0; }
     .mrow-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
     .mrow-name em { font-style: normal; font-size: 11px; color: var(--muted); margin-left: 8px; }
+    .payment-select { min-height: 25px; max-width: 150px; margin-left: 7px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); padding: 1px 7px; color: var(--ink-2); font-size: 10.5px; font-weight: 700; }
     .money-mini { position: relative; justify-self: end; }
     .money-mini::after { content: attr(data-label); position: absolute; top: -9px; right: 8px; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
     .money-mini::before { content: "R$"; position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--muted); pointer-events: none; }
@@ -642,6 +644,15 @@
             <button type="button" class="chip" data-bucket="fora">Dívidas &amp; travados</button>
           </div>
         </div>
+        <label class="field" id="paymentField"><span>Pago com</span>
+          <select id="paymentInput" class="input">
+            <option value="cash">Conta / dinheiro</option>
+            <option value="alimentacao">Flash · Alimentação</option>
+            <option value="refeicao">Flash · Refeição</option>
+            <option value="mobilidade">Flash · Mobilidade</option>
+            <option value="homeoffice">Flash · Home office</option>
+          </select>
+        </label>
         <button class="btn-primary" id="addBtn" type="button">＋ Adicionar</button>
         <p class="hint">Dentro dos meses você só edita: clique no valor, digite, Enter. As setas → aplicam daqui pra frente.</p>
       </section>
@@ -790,6 +801,7 @@
         if (!entry.actuals || typeof entry.actuals !== "object") entry.actuals = {};
         if (entry.kind === "income") { entry.bucket = null; return; }
         if (!entry.bucket) entry.bucket = defaultBucket(entry.kind);
+        if (!entry.paymentSource) entry.paymentSource = "cash";
         if (entry.cardId === undefined) entry.cardId = null;
         if (entry.recurring && typeof entry.recurring === "object") {
           const recurringAmount = Number(entry.recurring.amount || 0);
@@ -1084,7 +1096,8 @@
       return state.months.map((month) => {
         const income = sumItems(month.key, "income");
         const expenses = sumItems(month.key, "expense") + sumItems(month.key, "debt") + sumItems(month.key, "saving");
-        const result = income - expenses; running += result;
+        const cashExpenses = monthProjectedCashExpenses(month.key);
+        const result = income - cashExpenses; running += result;
         return { month, income, expenses, result, cash: running };
       });
     }
@@ -1094,6 +1107,15 @@
     function monthActualIncome(monthKey) { return state.items.filter((entry) => entry.kind === "income").reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0); }
     function monthActualExpenses(monthKey) {
       const items = state.items.filter((entry) => entry.kind !== "income" && !entry.cardId).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
+      const cards = state.cards.reduce((total, card) => total + Number(state.cardPaid[card.id] && state.cardPaid[card.id][monthKey] || 0), 0);
+      return items + cards;
+    }
+    function isBenefitPaid(entry) { return entry.kind === "expense" && benefitKeys().includes(entry.paymentSource); }
+    function monthProjectedCashExpenses(monthKey) {
+      return state.items.filter((entry) => entry.kind !== "income" && !isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.amounts[monthKey] || 0), 0);
+    }
+    function monthActualCashExpenses(monthKey) {
+      const items = state.items.filter((entry) => entry.kind !== "income" && !entry.cardId && !isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
       const cards = state.cards.reduce((total, card) => total + Number(state.cardPaid[card.id] && state.cardPaid[card.id][monthKey] || 0), 0);
       return items + cards;
     }
@@ -1116,8 +1138,8 @@
       }, 0);
       return items + cards;
     }
-    function monthProjectedResult(monthKey) { return monthIncome(monthKey) - state.items.filter((entry) => entry.kind !== "income").reduce((total, entry) => total + Number(entry.amounts[monthKey] || 0), 0); }
-    function monthActualResult(monthKey) { return monthActualIncome(monthKey) - monthActualExpenses(monthKey); }
+    function monthProjectedResult(monthKey) { return monthIncome(monthKey) - monthProjectedCashExpenses(monthKey); }
+    function monthActualResult(monthKey) { return monthActualIncome(monthKey) - monthActualCashExpenses(monthKey); }
     function monthActualCash(monthKey) {
       let cash = Number(state.openingCash || 0);
       for (const month of state.months) {
@@ -1164,12 +1186,19 @@
         homeoffice: { label: "Auxílio home office", color: "#7a55bf" }
       })[key];
     }
+    function paymentOptions(selected) {
+      return [{ key: "cash", label: "Conta / dinheiro" }, ...benefitKeys().map((key) => ({ key, label: `Flash · ${benefitMeta(key).label}` }))]
+        .map((option) => `<option value="${option.key}" ${option.key === selected ? "selected" : ""}>${option.label}</option>`).join("");
+    }
     function benefitMonthKey() {
       return state.benefitMonth && state.months.some((m) => m.key === state.benefitMonth) ? state.benefitMonth : state.months[state.months.length - 1].key;
     }
     function benefitBalance(key, throughMonth) {
       const account = state.benefits.accounts[key];
-      return state.months.filter((month) => month.key <= throughMonth).reduce((total, month) => total + Number(account.credits[month.key] || 0) - Number(account.spent[month.key] || 0) - Number(account.converted[month.key] || 0), 0);
+      return state.months.filter((month) => month.key <= throughMonth).reduce((total, month) => total + Number(account.credits[month.key] || 0) - Number(account.spent[month.key] || 0) - benefitMovementSpent(key, month.key) - Number(account.converted[month.key] || 0), 0);
+    }
+    function benefitMovementSpent(key, monthKey) {
+      return state.items.filter((entry) => entry.paymentSource === key).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
     }
     function voucherRemaining(voucher) { return Math.max(0, Number(voucher.amount || 0) - Number(voucher.used || 0)); }
 
@@ -1178,7 +1207,7 @@
       state.benefitMonth = monthKey;
       const flashBalance = benefitKeys().reduce((total, key) => total + benefitBalance(key, monthKey), 0);
       const voucherBalance = state.benefits.vouchers.filter((voucher) => voucher.month <= monthKey).reduce((total, voucher) => total + voucherRemaining(voucher), 0);
-      const monthUsed = benefitKeys().reduce((total, key) => total + Number(state.benefits.accounts[key].spent[monthKey] || 0), 0);
+      const monthUsed = benefitKeys().reduce((total, key) => total + Number(state.benefits.accounts[key].spent[monthKey] || 0) + benefitMovementSpent(key, monthKey), 0);
       return `<div class="card benefits-view">
         <div class="benefits-head">
           <div class="benefits-title"><h2>Benefícios Flash</h2><p>Saldo de consumo separado da sua renda e do caixa bancário.</p></div>
@@ -1210,7 +1239,7 @@
         <header><strong>${meta.label}</strong><span class="benefit-balance">${money(benefitBalance(key, monthKey))}</span></header>
         <div class="benefit-fields">
           <label>Crédito no mês<input type="number" min="0" step="0.01" inputmode="decimal" value="${account.credits[monthKey] || ""}" onchange="updateBenefit('${key}','credits','${monthKey}',this.value)" /></label>
-          <label>Uso direto<input type="number" min="0" step="0.01" inputmode="decimal" value="${account.spent[monthKey] || ""}" onchange="updateBenefit('${key}','spent','${monthKey}',this.value)" /></label>
+          <label>Uso avulso<input type="number" min="0" step="0.01" inputmode="decimal" value="${account.spent[monthKey] || ""}" onchange="updateBenefit('${key}','spent','${monthKey}',this.value)" title="Uso que não foi lançado na movimentação" /></label>
           <label>Convertido<input type="number" min="0" step="0.01" inputmode="decimal" value="${account.converted[monthKey] || ""}" readonly title="Calculado pelos vales registrados" /></label>
         </div>
       </section>`;
@@ -1350,6 +1379,7 @@
       render();
     }
     function updateItemBucket(itemId, bucket) { const e = state.items.find((c) => c.id === itemId); if (!e) return; e.bucket = bucket; render(); }
+    function updatePaymentSource(itemId, source) { const e = state.items.find((c) => c.id === itemId); if (!e) return; e.paymentSource = benefitKeys().includes(source) ? source : "cash"; render(); }
     function updateTargetRate(rawValue) { state.targetRate = Math.max(0, numberValue(rawValue)); render(); }
 
     /* ---------- cards view ---------- */
@@ -1597,7 +1627,7 @@
           <div class="mstats">
             ${mstatCompare("Entradas", sel.income, monthActualIncome(selKey))}
             ${mstatCompare("Saídas", sel.expenses, monthActualExpenses(selKey))}
-            ${mstatCompare("Resultado", sel.result, monthActualResult(selKey))}
+            ${mstatCompare("Resultado em conta", sel.result, monthActualResult(selKey))}
             ${mstatCompare("Caixa acumulado", sel.cash, monthActualCash(selKey))}
           </div>
           ${allocBar(selKey)}
@@ -1620,6 +1650,7 @@
         <input class="input da-name" placeholder="O que foi? (ex: farmácia)" />
         <div class="money-field"><input class="input da-val" type="number" step="0.01" inputmode="decimal" placeholder="valor" /></div>
         <select class="input da-bucket">${bucketOrder().map((b) => `<option value="${b}" ${b === "necessidades" ? "selected" : ""}>${bucketLabel(b)}</option>`).join("")}</select>
+        <select class="input da-source">${paymentOptions("cash")}</select>
         <button class="da-btn" type="button" onclick="addDayExpense('${monthKey}', this)">Lançar</button>
       </div>`;
     }
@@ -1629,8 +1660,10 @@
       const name = root.querySelector(".da-name").value.trim();
       const val = numberValue(root.querySelector(".da-val").value);
       const bucket = root.querySelector(".da-bucket").value;
+      const source = root.querySelector(".da-source").value;
       if (!name || val <= 0) { root.querySelector(".da-name").focus(); return; }
       const entry = item(`day-${Date.now()}`, name, "expense", { [monthKey]: val }, bucket);
+      entry.paymentSource = source;
       entry.actuals[monthKey] = val;
       entry.done[monthKey] = true;
       state.items.push(entry);
@@ -1675,7 +1708,7 @@
       return `<div class="mrow ${done ? "done" : partial ? "partial" : ""}">
         <button class="rowcheck ${done ? "on" : partial ? "partial" : ""}" type="button" title="${done ? "Feito (clique pra desmarcar)" : partial ? "Parcial (clique para completar)" : "Marcar como feito"}" onclick="toggleDone('${entry.id}', '${monthKey}')">${done ? "✓" : partial ? "–" : ""}</button>
         ${lead}
-        <span class="mrow-name">${entry.name}</span>
+        <span class="mrow-name">${entry.name}${entry.kind === "expense" ? `<select class="payment-select" title="Forma de pagamento" onchange="updatePaymentSource('${entry.id}',this.value)">${paymentOptions(entry.paymentSource || "cash")}</select>` : ""}</span>
         <div class="money-mini" data-label="projetado"><input class="mrow-val" type="number" step="0.01" inputmode="decimal" value="${entry.amounts[monthKey] || ""}" onchange="updateAmount('${entry.id}', '${monthKey}', this.value)" /></div>
         <div class="money-mini" data-label="realizado"><input class="mrow-val" type="number" step="0.01" inputmode="decimal" placeholder="—" value="${entry.actuals && entry.actuals[monthKey] != null ? entry.actuals[monthKey] : ""}" onchange="updateActual('${entry.id}', '${monthKey}', this.value)" /></div>
         <div class="mrow-actions">
@@ -1888,9 +1921,12 @@
       const startKey = document.getElementById("startInput").value;
       const endKey = frequency === "oneoff" ? startKey : document.getElementById("endInput").value;
       const bucket = kind === "income" ? null : composerBucket;
+      const paymentSource = kind === "expense" ? document.getElementById("paymentInput").value : "cash";
       const amounts = {};
       state.months.forEach((m) => { if (m.key < startKey || m.key > endKey) return; amounts[m.key] = amount; });
-      state.items.push(item(`${Date.now()}`, name, kind, amounts, bucket));
+      const entry = item(`${Date.now()}`, name, kind, amounts, bucket);
+      entry.paymentSource = paymentSource;
+      state.items.push(entry);
       document.getElementById("nameInput").value = "";
       document.getElementById("amountInput").value = "";
       render();
@@ -1959,6 +1995,7 @@
     function syncComposerUi() {
       document.querySelectorAll("#kindSeg button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.kind === composerKind)));
       document.getElementById("bucketField").style.display = composerKind === "income" ? "none" : "grid";
+      document.getElementById("paymentField").style.display = composerKind === "expense" ? "grid" : "none";
       document.querySelectorAll("#bucketChips button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.bucket === composerBucket)));
       updateFrequencyUi();
     }
