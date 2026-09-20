@@ -890,7 +890,9 @@
 
     function ensureBenefits(target) {
       const keys = ["alimentacao", "refeicao", "mobilidade", "homeoffice"];
+      const monthlyDefaults = { alimentacao: 294, refeicao: 1890, mobilidade: 126, homeoffice: 367.5 };
       if (!target.benefits || typeof target.benefits !== "object") target.benefits = {};
+      target.benefits.monthlyDefaults = monthlyDefaults;
       if (!target.benefits.accounts || typeof target.benefits.accounts !== "object") target.benefits.accounts = {};
       keys.forEach((key) => {
         const account = target.benefits.accounts[key] || {};
@@ -900,6 +902,13 @@
         target.benefits.accounts[key] = account;
       });
       if (!Array.isArray(target.benefits.vouchers)) target.benefits.vouchers = [];
+      if (!target.benefits.creditDefaultsAppliedV1) {
+        (target.months || []).forEach((month) => {
+          if (month.key === "2026-09") return;
+          keys.forEach((key) => { target.benefits.accounts[key].credits[month.key] = monthlyDefaults[key]; });
+        });
+        target.benefits.creditDefaultsAppliedV1 = true;
+      }
     }
 
     function loadState() {
@@ -2144,6 +2153,10 @@
       const date = new Date(Number(y), Number(mo), 1);
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       state.months.push({ key, label: monthLabel(key) });
+      ensureBenefits(state);
+      if (key !== "2026-09") benefitKeys().forEach((benefitKey) => {
+        state.benefits.accounts[benefitKey].credits[key] = Number(state.benefits.monthlyDefaults[benefitKey] || 0);
+      });
       state.items.forEach((entry) => {
         if (entry.recurring && key >= entry.recurring.start) entry.amounts[key] = Number(entry.recurring.amount || 0);
       });
