@@ -389,6 +389,7 @@
     .pill.expense { color: var(--ink-2); background: var(--surface-2); border: 1px solid var(--line); }
     .pill.debt { color: var(--crit); background: var(--crit-soft); }
     .pill.saving { color: var(--accent); background: var(--accent-soft); }
+    .pill.reserve_withdrawal { color: var(--warn); background: var(--warn-soft); }
     .pill.investment { color: #6a4fb0; background: #eee9fa; }
     .bucket-select { min-height: 28px; padding: 2px 8px; font-size: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); color: var(--ink-2); }
     .cell-input { width: 100px; text-align: right; border: 1px solid transparent; background: transparent; min-height: 30px; padding: 4px 8px; border-radius: 8px; font-variant-numeric: tabular-nums; }
@@ -690,6 +691,7 @@
             <button type="button" data-kind="income">Entrada</button>
             <button type="button" data-kind="debt">Dívida</button>
             <button type="button" data-kind="saving">Reserva</button>
+            <button type="button" data-kind="reserve_withdrawal">Retirada reserva</button>
             <button type="button" data-kind="investment">Investimento</button>
           </div>
         </div>
@@ -860,7 +862,7 @@
       return out;
     }
 
-    function defaultBucket(kind) { return kind === "debt" ? "fora" : (kind === "saving" || kind === "investment") ? "reserva" : "necessidades"; }
+    function defaultBucket(kind) { return kind === "debt" ? "fora" : (["saving", "reserve_withdrawal", "investment"].includes(kind)) ? "reserva" : "necessidades"; }
     function bucketOrder() { return ["necessidades", "lazer", "educacao", "liberdade", "reserva", "folga"]; }
     function bucketLabel(bucket) {
       return ({ necessidades: "Necessidades", lazer: "Lazer", educacao: "Educacao", liberdade: "Liberdade financeira", reserva: "Reserva", folga: "Folga / livre", fora: "Dividas & travados" })[bucket] || bucket;
@@ -879,6 +881,7 @@
       const fixedTargetTotal = bucketOrder().filter((bucket) => bucket !== "folga").reduce((total, bucket) => total + Number(target.targets[bucket] || 0), Number(target.targets.fora || 0));
       target.targets.folga = Math.max(0, 100 - fixedTargetTotal);
       (target.items || []).forEach((entry) => {
+        if (entry.kind === "saving" && /retirada/i.test(String(entry.name || ""))) entry.kind = "reserve_withdrawal";
         if (!entry.done || typeof entry.done !== "object") entry.done = {};
         if (!entry.actuals || typeof entry.actuals !== "object") entry.actuals = {};
         if (entry.kind === "income") { entry.bucket = null; return; }
@@ -1198,29 +1201,29 @@
     function monthIncome(monthKey) { return sumItems(monthKey, "income"); }
     function monthActualIncome(monthKey) { return state.items.filter((entry) => entry.kind === "income").reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0); }
     function monthActualExpenses(monthKey) {
-      const items = state.items.filter((entry) => entry.kind !== "income" && entry.kind !== "saving" && !entry.cardId).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
+      const items = state.items.filter((entry) => !["income", "saving", "reserve_withdrawal"].includes(entry.kind) && !entry.cardId).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
       const cards = state.cards.reduce((total, card) => total + Number(state.cardPaid[card.id] && state.cardPaid[card.id][monthKey] || 0), 0);
       return items + cards;
     }
     function isBenefitPaid(entry) { return entry.kind === "expense" && benefitKeys().includes(entry.paymentSource); }
     function monthProjectedCashExpenses(monthKey) {
-      return state.items.filter((entry) => entry.kind !== "income" && entry.kind !== "saving" && !isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.amounts[monthKey] || 0), 0);
+      return state.items.filter((entry) => !["income", "saving", "reserve_withdrawal"].includes(entry.kind) && !isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.amounts[monthKey] || 0), 0);
     }
     function monthActualCashExpenses(monthKey) {
-      const items = state.items.filter((entry) => entry.kind !== "income" && entry.kind !== "saving" && !entry.cardId && !isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
+      const items = state.items.filter((entry) => !["income", "saving", "reserve_withdrawal"].includes(entry.kind) && !entry.cardId && !isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
       const cards = state.cards.reduce((total, card) => total + Number(state.cardPaid[card.id] && state.cardPaid[card.id][monthKey] || 0), 0);
       return items + cards;
     }
     function itemBucket(entry) { return entry.bucket || defaultBucket(entry.kind); }
     function monthBucketSpend(monthKey, bucket) {
       if (bucket === "folga") {
-        const committed = state.items.filter((entry) => entry.kind !== "income" && itemBucket(entry) !== "folga").reduce((total, entry) => total + Number(entry.amounts[monthKey] || 0), 0);
+        const committed = state.items.filter((entry) => entry.kind !== "income" && entry.kind !== "reserve_withdrawal" && itemBucket(entry) !== "folga").reduce((total, entry) => total + Number(entry.amounts[monthKey] || 0), 0);
         return Math.max(0, monthIncome(monthKey) - committed);
       }
-      return state.items.filter((e) => e.kind !== "income" && itemBucket(e) === bucket).reduce((t, e) => t + Number(e.amounts[monthKey] || 0), 0);
+      return state.items.filter((e) => e.kind !== "income" && e.kind !== "reserve_withdrawal" && itemBucket(e) === bucket).reduce((t, e) => t + Number(e.amounts[monthKey] || 0), 0);
     }
     function monthBucketActual(monthKey, bucket) {
-      const items = state.items.filter((entry) => entry.kind !== "income" && !entry.cardId && itemBucket(entry) === bucket).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
+      const items = state.items.filter((entry) => entry.kind !== "income" && entry.kind !== "reserve_withdrawal" && !entry.cardId && itemBucket(entry) === bucket).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
       const cards = state.cards.reduce((total, card) => {
         const invoice = cardFatura(card.id, monthKey);
         const paid = Number(state.cardPaid[card.id] && state.cardPaid[card.id][monthKey] || 0);
@@ -1247,8 +1250,8 @@
         return sum + projected;
       }, 0), 0);
     }
-    function monthReserveBalance(monthKey) { return cumulativeKind(monthKey, "saving", "projected"); }
-    function monthActualReserveBalance(monthKey) { return cumulativeKind(monthKey, "saving", "actual"); }
+    function monthReserveBalance(monthKey) { return cumulativeKind(monthKey, "saving", "projected") - cumulativeKind(monthKey, "reserve_withdrawal", "projected"); }
+    function monthActualReserveBalance(monthKey) { return cumulativeKind(monthKey, "saving", "actual") - cumulativeKind(monthKey, "reserve_withdrawal", "actual"); }
     function monthInvestmentBalance(monthKey) { return cumulativeKind(monthKey, "investment", "projected"); }
     function monthActualInvestmentBalance(monthKey) { return cumulativeKind(monthKey, "investment", "actual"); }
     function monthProximity(monthKey) { const inc = monthIncome(monthKey); if (inc <= 0) return null; const fora = monthBucketSpend(monthKey, "fora"); return Math.max(0, Math.min(1, (inc - fora) / inc)); }
@@ -1871,6 +1874,7 @@
             ${mCardsList(selKey)}
             ${mList(selKey, "Dívidas", "debt")}
             ${mList(selKey, "Reserva", "saving")}
+            ${mList(selKey, "Retiradas da reserva", "reserve_withdrawal")}
             ${mList(selKey, "Investimentos", "investment")}
             ${sel.income === 0 && sel.expenses === 0 ? `<div class="empty">Nada lançado em ${sel.month.label}. Use o "Lançar" na lateral ou o gasto do dia abaixo.</div>` : ""}
           </div>
@@ -1934,7 +1938,7 @@
     }
 
     function mRow(entry, monthKey) {
-      const canBucket = entry.kind === "expense" || entry.kind === "saving" || entry.kind === "investment";
+      const canBucket = ["expense", "saving", "reserve_withdrawal", "investment"].includes(entry.kind);
       const b = itemBucket(entry);
       const projected = Number(entry.amounts[monthKey] || 0);
       const actual = Number(entry.actuals && entry.actuals[monthKey] || 0);
@@ -2032,6 +2036,7 @@
         sectionRow("Saídas"), ...itemRows("expense"),
         sectionRow("Dívidas no fluxo"), ...itemRows("debt"),
         sectionRow("Reserva"), ...itemRows("saving"),
+        sectionRow("Retiradas da reserva"), ...itemRows("reserve_withdrawal"),
         sectionRow("Investimentos"), ...itemRows("investment")
       ].join("");
     }
@@ -2056,7 +2061,7 @@
         ${state.months.map((m) => `<td><input class="cell-input" type="number" step="0.01" value="${entry.amounts[m.key] || ""}" onchange="updateAmount('${entry.id}', '${m.key}', this.value)" /></td>`).join("")}
       </tr>`;
     }
-    function kindLabel(kind) { return ({ income: "entrada", expense: "saída", debt: "dívida", saving: "reserva", investment: "investimento" })[kind] || kind; }
+    function kindLabel(kind) { return ({ income: "entrada", expense: "saída", debt: "dívida", saving: "reserva", reserve_withdrawal: "retirada da reserva", investment: "investimento" })[kind] || kind; }
 
     /* ---------- debts ---------- */
     function debtsView() {
@@ -2241,7 +2246,7 @@
       composerKind = kind;
       if (kind === "income") composerBucket = null;
       else if (kind === "debt") composerBucket = "fora";
-      else if (kind === "saving" || kind === "investment") {
+      else if (["saving", "reserve_withdrawal", "investment"].includes(kind)) {
         composerBucket = "reserva";
         document.getElementById("frequencyInput").value = "oneoff";
         const selectedMonth = state.monthSel || budgetMonthKey();
