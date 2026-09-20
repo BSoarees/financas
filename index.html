@@ -178,6 +178,43 @@
 
     /* ---------- budget ---------- */
     .budget { padding: 20px 22px; display: grid; gap: 18px; }
+    .budget-clean { padding: 20px 22px; display: grid; gap: 16px; }
+    .budget-clean-head { display: flex; align-items: end; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+    .budget-clean-head h2 { margin: 0; font-size: 21px; letter-spacing: -.02em; }
+    .budget-clean-head p { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; }
+    .budget-kpis-clean { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+    .budget-kpi-clean { min-width: 0; padding: 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+    .budget-kpi-clean span { display: block; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+    .budget-kpi-clean b { display: block; margin-top: 5px; overflow: hidden; font-size: 19px; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
+    .budget-kpi-clean small { display: block; margin-top: 3px; color: var(--muted); font-size: 10.5px; }
+    .budget-kpi-clean.result { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .budget-kpi-clean.result span, .budget-kpi-clean.result small { color: rgba(255,255,255,.62); }
+    .budget-equation { padding: 10px 12px; border-radius: 10px; background: var(--surface-2); color: var(--ink-2); font-size: 12px; line-height: 1.45; }
+    .budget-equation b { color: var(--ink); }
+    .budget-columns { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(260px, .7fr); gap: 14px; align-items: start; }
+    .budget-panel { border: 1px solid var(--line); border-radius: 13px; overflow: hidden; background: var(--surface); }
+    .budget-panel-title { padding: 12px 14px; border-bottom: 1px solid var(--line); background: var(--surface-2); font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+    .cash-group { padding: 10px 14px; }
+    .cash-group + .cash-group { border-top: 1px solid var(--line); }
+    .cash-group-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; margin-bottom: 5px; }
+    .cash-group-head strong { font-size: 13px; }
+    .cash-group-head b { font-size: 13px; font-variant-numeric: tabular-nums; }
+    .cash-line { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 5px 0; color: var(--ink-2); font-size: 12px; }
+    .cash-line span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cash-line b { color: var(--ink); font-variant-numeric: tabular-nums; }
+    .cash-line small { color: var(--muted); margin-left: 5px; }
+    .cash-empty { padding: 5px 0; color: var(--muted); font-size: 11.5px; }
+    .allocation-clean { padding: 6px 14px 12px; }
+    .allocation-row { display: grid; grid-template-columns: minmax(110px, 1fr) auto; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--hair); }
+    .allocation-row:last-child { border-bottom: 0; }
+    .allocation-row span { display: flex; align-items: center; gap: 7px; min-width: 0; font-size: 12px; }
+    .allocation-row i { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 3px; }
+    .allocation-row div { text-align: right; }
+    .allocation-row b { display: block; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+    .allocation-row small { color: var(--muted); font-size: 10px; }
+    .budget-targets { border-top: 1px solid var(--line); }
+    .budget-targets summary { cursor: pointer; padding: 11px 14px; color: var(--ink-2); font-size: 11.5px; font-weight: 700; }
+    .budget-targets .targets-row { padding: 0 14px 14px; }
     .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .month-pick { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
     .month-pick select { min-height: 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 0 10px; }
@@ -579,6 +616,9 @@
       .mrow.cardrow { grid-template-columns: 24px 1fr; grid-template-areas: "check name" "check pay"; }
       .mrow.cardrow .rowcheck { grid-area: check; align-self: center; } .mrow.cardrow .kind-dot { display: none; } .mrow.cardrow .mrow-name { grid-area: name; } .mrow.cardrow .cardpay { grid-area: pay; justify-self: start; }
       .benefits-view { padding: 16px; }
+      .budget-clean { padding: 16px; }
+      .budget-kpis-clean { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .budget-columns { grid-template-columns: 1fr; }
       .benefit-summary { grid-template-columns: 1fr; }
       .benefit-category-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .benefit-grid { grid-template-columns: 1fr; }
@@ -1329,27 +1369,73 @@
       const selected = budgetMonthKey();
       state.budgetMonth = selected;
       const income = monthIncome(selected);
-      const potes = bucketOrder();
-      const targetTotal = potes.reduce((total, bucket) => total + Number(state.targets[bucket] || 0), Number(state.targets.fora || 0));
-      return `<div class="card budget">
-        <div class="section-head">
-          <h2 class="panel-title">Divisão do mês vs ideal</h2>
+      const actualIncome = monthActualIncome(selected);
+      const groups = budgetCashGroups(selected);
+      const cashOut = groups.reduce((total, group) => total + group.projected, 0);
+      const actualCashOut = groups.reduce((total, group) => total + group.actual, 0);
+      const benefitProjected = state.items.filter((entry) => isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.amounts[selected] || 0), 0);
+      const benefitActual = state.items.filter((entry) => isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[selected] || 0), 0);
+      const result = income - cashOut;
+      const actualResult = actualIncome - actualCashOut;
+      const allocationBuckets = [...bucketOrder().filter((bucket) => bucket !== "folga"), "fora"];
+      const targetTotal = bucketOrder().reduce((total, bucket) => total + Number(state.targets[bucket] || 0), Number(state.targets.fora || 0));
+      return `<div class="card budget-clean">
+        <div class="budget-clean-head">
+          <div><h2>Orçamento do mês</h2><p>Fluxo da conta separado de cartão, dívidas e benefícios.</p></div>
           <label class="month-pick">Mês <select onchange="setBudgetMonth(this.value)">${months.map((m) => `<option value="${m.key}" ${m.key === selected ? "selected" : ""}>${m.label}</option>`).join("")}</select></label>
         </div>
-        <div class="targets-row">
-          ${potes.map((b) => `<label>${bucketLabel(b)}<input type="number" step="1" min="0" value="${state.targets[b] || 0}" ${b === "folga" ? "readonly title=\"Calculado para o ideal fechar 100%\"" : `onchange="updateTarget('${b}', this.value)"`} /></label>`).join("")}
-          <span class="targets-total ${Math.abs(targetTotal - 100) < 0.1 ? "ok" : "bad"}">= ${targetTotal.toFixed(0)}%</span>
-          <label class="debt-target">Ideal dívida<input type="number" step="1" min="0" max="100" value="${state.targets.fora || 0}" onchange="updateTarget('fora', this.value)" /></label>
+        <div class="budget-kpis-clean">
+          ${budgetKpi("Entradas", income, actualIncome)}
+          ${budgetKpi("Saídas da conta", cashOut, actualCashOut)}
+          ${budgetKpi("Pagos com benefícios", benefitProjected, benefitActual)}
+          ${budgetKpi("Sobra na conta", result, actualResult, "result")}
         </div>
-        <div class="potes">
-          ${potes.map((b) => poteRow(b, selected, income)).join("")}
-          ${foraRow(selected, income)}
-        </div>
-        <div class="traj">
-          <div class="panel-title">Trajetória da proximidade</div>
-          <div class="bars">${months.map((m) => trajCol(m, selected)).join("")}</div>
+        <div class="budget-equation"><b>${money(income)}</b> de entradas − <b>${money(cashOut)}</b> que sai da conta = <b>${money(result)}</b> de sobra prevista. Gastos pagos com Flash ficam fora dessa conta.</div>
+        <div class="budget-columns">
+          <section class="budget-panel">
+            <div class="budget-panel-title">O que forma as saídas da conta</div>
+            ${groups.map((group) => budgetCashGroup(group)).join("")}
+          </section>
+          <section class="budget-panel">
+            <div class="budget-panel-title">Distribuição planejada</div>
+            <div class="allocation-clean">${allocationBuckets.map((bucket) => {
+              const value = monthBucketSpend(selected, bucket);
+              const pct = income > 0 ? value / income * 100 : 0;
+              return `<div class="allocation-row"><span><i style="background:${poteColor(bucket)}"></i>${bucketLabel(bucket)}</span><div><b>${money(value)}</b><small>${pct.toFixed(1)}% da renda · meta ${Number(state.targets[bucket] || 0)}%</small></div></div>`;
+            }).join("")}</div>
+            <details class="budget-targets"><summary>Ajustar metas percentuais</summary><div class="targets-row">
+              ${bucketOrder().map((bucket) => `<label>${bucketLabel(bucket)}<input type="number" step="1" min="0" value="${state.targets[bucket] || 0}" ${bucket === "folga" ? "readonly" : `onchange="updateTarget('${bucket}', this.value)"`} /></label>`).join("")}
+              <label class="debt-target">Dívidas<input type="number" step="1" min="0" max="100" value="${state.targets.fora || 0}" onchange="updateTarget('fora', this.value)" /></label>
+              <span class="targets-total ${Math.abs(targetTotal - 100) < 0.1 ? "ok" : "bad"}">= ${targetTotal.toFixed(0)}%</span>
+            </div></details>
+          </section>
         </div>
       </div>`;
+    }
+
+    function budgetKpi(label, projected, actual, cls) {
+      return `<div class="budget-kpi-clean ${cls || ""}"><span>${label}</span><b>${money(projected)}</b><small>Realizado ${money(actual)}</small></div>`;
+    }
+
+    function budgetCashGroups(monthKey) {
+      const direct = state.items.filter((entry) => entry.kind === "expense" && itemBucket(entry) !== "fora" && !entry.cardId && !isBenefitPaid(entry) && Number(entry.amounts[monthKey] || 0) !== 0);
+      const debts = state.items.filter((entry) => (entry.kind === "debt" || (entry.kind === "expense" && itemBucket(entry) === "fora")) && !entry.cardId && !isBenefitPaid(entry) && Number(entry.amounts[monthKey] || 0) !== 0);
+      const savings = state.items.filter((entry) => entry.kind === "saving" && !entry.cardId && Number(entry.amounts[monthKey] || 0) !== 0);
+      const cards = state.cards.map((card) => ({
+        name: `Fatura ${card.name}`,
+        projected: cardFatura(card.id, monthKey),
+        actual: Number(state.cardPaid[card.id] && state.cardPaid[card.id][monthKey] || 0)
+      })).filter((entry) => entry.projected !== 0 || entry.actual !== 0);
+      const itemGroup = (label, entries) => ({
+        label,
+        lines: entries.map((entry) => ({ name: entry.name, projected: Number(entry.amounts[monthKey] || 0), actual: Number(entry.actuals && entry.actuals[monthKey] || 0) }))
+      });
+      const groups = [itemGroup("Despesas diretas", direct), { label: "Faturas de cartão", lines: cards }, itemGroup("Pagamentos de dívidas", debts), itemGroup("Reserva e investimentos", savings)];
+      return groups.map((group) => ({ ...group, projected: group.lines.reduce((total, line) => total + line.projected, 0), actual: group.lines.reduce((total, line) => total + line.actual, 0) }));
+    }
+
+    function budgetCashGroup(group) {
+      return `<div class="cash-group"><div class="cash-group-head"><strong>${group.label}</strong><b>${money(group.projected)}</b></div>${group.lines.length ? group.lines.map((line) => `<div class="cash-line"><span>${attr(line.name)}<small>real ${money(line.actual)}</small></span><b>${money(line.projected)}</b></div>`).join("") : `<div class="cash-empty">Nenhum lançamento neste mês.</div>`}</div>`;
     }
 
     function poteRow(bucket, monthKey, income) {
