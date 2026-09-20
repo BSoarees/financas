@@ -208,6 +208,9 @@
     .cash-line b { color: var(--ink); font-variant-numeric: tabular-nums; }
     .cash-line small { color: var(--muted); margin-left: 5px; }
     .cash-empty { padding: 5px 0; color: var(--muted); font-size: 11.5px; }
+    .budget-flow-subtotal { border-top: 1px solid var(--line); background: var(--surface-2); padding: 10px 14px; display: grid; gap: 7px; }
+    .budget-flow-subtotal div { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; }
+    .budget-flow-subtotal div:last-child { padding-top: 7px; border-top: 1px solid var(--line); font-weight: 800; }
     .allocation-clean { padding: 6px 14px 12px; }
     .allocation-row { display: grid; grid-template-columns: minmax(110px, 1fr) auto; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--hair); }
     .allocation-row:last-child { border-bottom: 0; }
@@ -1308,7 +1311,8 @@
         const committed = state.items.filter((entry) => !["income", "reserve_withdrawal", "investment_redemption"].includes(entry.kind) && itemBucket(entry) !== "folga").reduce((total, entry) => total + Number(entry.amounts[monthKey] || 0), 0);
         return Math.max(0, monthIncome(monthKey) - committed);
       }
-      return state.items.filter((e) => !["income", "reserve_withdrawal", "investment_redemption"].includes(e.kind) && itemBucket(e) === bucket).reduce((t, e) => t + Number(e.amounts[monthKey] || 0), 0);
+      const value = state.items.filter((e) => !["income", "reserve_withdrawal", "investment_redemption"].includes(e.kind) && itemBucket(e) === bucket).reduce((t, e) => t + Number(e.amounts[monthKey] || 0), 0);
+      return bucket === "reserva" ? Math.max(0, value - sumItems(monthKey, "reserve_withdrawal")) : value;
     }
     function monthBucketActual(monthKey, bucket) {
       const items = state.items.filter((entry) => !["income", "reserve_withdrawal", "investment_redemption"].includes(entry.kind) && !entry.cardId && itemBucket(entry) === bucket).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
@@ -1319,7 +1323,9 @@
         const bucketValue = state.items.filter((entry) => entry.cardId === card.id && itemBucket(entry) === bucket).reduce((sum, entry) => sum + Number(entry.amounts[monthKey] || 0), 0);
         return total + paid * bucketValue / invoice;
       }, 0);
-      return items + cards;
+      const value = items + cards;
+      const withdrawals = bucket === "reserva" ? state.items.filter((entry) => entry.kind === "reserve_withdrawal").reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0) : 0;
+      return Math.max(0, value - withdrawals);
     }
     function monthProjectedResult(monthKey) { return monthIncome(monthKey) + sumItems(monthKey, "investment_redemption") - monthProjectedCashExpenses(monthKey); }
     function monthActualResult(monthKey) { return monthActualIncome(monthKey) + state.items.filter((entry) => entry.kind === "investment_redemption").reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0) - monthActualCashExpenses(monthKey); }
@@ -1562,8 +1568,6 @@
       const groups = budgetCashGroups(selected);
       const cashOut = groups.reduce((total, group) => total + group.projected, 0);
       const actualCashOut = groups.reduce((total, group) => total + group.actual, 0);
-      const benefitProjected = state.items.filter((entry) => isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.amounts[selected] || 0), 0);
-      const benefitActual = state.items.filter((entry) => isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[selected] || 0), 0);
       const result = cashIn - cashOut;
       const actualResult = actualCashIn - actualCashOut;
       const totals = monthTotals();
@@ -1580,15 +1584,12 @@
           <label class="month-pick">Mês <select onchange="setBudgetMonth(this.value)">${months.map((m) => `<option value="${m.key}" ${m.key === selected ? "selected" : ""}>${m.label}</option>`).join("")}</select></label>
         </div>
         <div class="budget-kpis-clean">
-          ${budgetKpi("Entradas na conta", cashIn, actualCashIn)}
-          ${budgetKpi("Saídas da conta", cashOut, actualCashOut)}
-          ${budgetKpi("Pagos com benefícios", benefitProjected, benefitActual)}
-          ${budgetKpi("Resultado do mês", result, actualResult)}
-          ${budgetKpi("Saldo ao fim do mês", finalCash, finalActualCash, "result")}
+          ${budgetKpi("Saldo inicial do mês", previousCash)}
+          ${budgetKpi("Resultado do mês", result)}
+          ${budgetKpi("Total em reserva", monthReserveBalance(selected))}
+          ${budgetKpi("Total em investimentos", monthInvestmentBalance(selected))}
+          ${budgetKpi("Saldo na conta", finalCash, "result")}
         </div>
-        ${redemptions || actualRedemptions ? `<div class="budget-equation">As entradas incluem ${money(redemptions)} em resgates líquidos de investimentos (${money(actualRedemptions)} realizado).</div>` : ""}
-        <div class="budget-equation"><b>${money(previousCash)}</b> de saldo anterior + <b>${money(result)}</b> de resultado em ${labelForMonth(selected)} = <b>${money(finalCash)}</b> ao fim do mês. No realizado: ${money(previousActualCash)} + ${money(actualResult)} = ${money(finalActualCash)}.</div>
-        <div class="budget-equation">Patrimônio em investimentos no fim do mês: <b>${money(monthInvestmentBalance(selected))}</b>. Aportes estão nas saídas da conta; atualizações de valor ficam somente na carteira.</div>
         <div class="purpose-summary">
           ${["personal", "work", "reimbursable"].map((purpose) => `<div class="purpose-kpi"><span>${purposeLabel(purpose)}</span><b>${money(state.items.filter((entry) => entry.kind === "expense" && (entry.purpose || "personal") === purpose).reduce((total, entry) => total + Number(entry.amounts[selected] || 0), 0))}</b></div>`).join("")}
         </div>
@@ -1596,6 +1597,7 @@
           <section class="budget-panel">
             <div class="budget-panel-title">O que forma as saídas da conta</div>
             ${groups.map((group) => budgetCashGroup(group)).join("")}
+            <div class="budget-flow-subtotal"><div><span>Entradas no mês</span><b>${money(cashIn)}</b></div><div><span>Total de saídas</span><b>${money(cashOut)}</b></div><div><span>Resultado do mês</span><b class="${result < 0 ? "neg" : "pos"}">${money(result)}</b></div></div>
           </section>
           <section class="budget-panel">
             <div class="budget-panel-title">Distribuição planejada</div>
@@ -1614,8 +1616,8 @@
       </div>`;
     }
 
-    function budgetKpi(label, projected, actual, cls) {
-      return `<div class="budget-kpi-clean ${cls || ""}"><span>${label}</span><b>${money(projected)}</b><small>Realizado ${money(actual)}</small></div>`;
+    function budgetKpi(label, value, cls) {
+      return `<div class="budget-kpi-clean ${cls || ""}"><span>${label}</span><b class="${value < 0 ? "neg" : ""}">${money(value)}</b></div>`;
     }
 
     function budgetCashGroups(monthKey) {
