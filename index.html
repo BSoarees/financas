@@ -1602,7 +1602,7 @@
           <section class="budget-panel">
             <div class="budget-panel-title">Distribuição planejada</div>
             <div class="allocation-clean">${allocationBuckets.map((bucket) => {
-              const value = monthBucketSpend(selected, bucket);
+              const value = bucket === "reserva" ? monthReserveBalance(selected) : monthBucketSpend(selected, bucket);
               const pct = income > 0 ? value / income * 100 : 0;
               return `<div class="allocation-row"><span><i style="background:${poteColor(bucket)}"></i>${bucketLabel(bucket)}</span><div><b>${money(value)}</b><small>${pct.toFixed(1)}% da renda · meta ${Number(state.targets[bucket] || 0)}%</small></div></div>`;
             }).join("")}</div>
