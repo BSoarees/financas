@@ -421,6 +421,7 @@
     .benefit-kpi { padding: 14px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface-2); }
     .benefit-kpi span { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
     .benefit-kpi b { display: block; margin-top: 5px; font-size: 20px; font-variant-numeric: tabular-nums; }
+    .benefit-kpi small { display: block; margin-top: 3px; color: var(--muted); font-size: 10.5px; }
     .benefit-kpi.total { background: #171b18; color: #fff; border-color: #171b18; }
     .benefit-kpi.total span { color: rgba(255,255,255,.62); }
     .benefit-category-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
@@ -434,18 +435,21 @@
     .benefit-card header strong { display: flex; align-items: center; gap: 8px; font-size: 15px; }
     .benefit-card header strong::before { content: ""; width: 9px; height: 9px; border-radius: 3px; background: var(--bc); }
     .benefit-balance { color: var(--bc); font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
-    .benefit-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .benefit-fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
     .benefit-fields label { display: grid; gap: 5px; min-width: 0; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
     .benefit-fields input { width: 100%; min-width: 0; min-height: 38px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); padding: 0 9px; font-variant-numeric: tabular-nums; }
     .benefit-fields input:focus { outline: none; border-color: var(--bc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--bc) 18%, #fff); }
     .benefit-readonly { min-height: 38px; display: flex; align-items: center; justify-content: flex-end; border: 0; border-radius: 9px; background: color-mix(in srgb, var(--bc) 8%, var(--surface)); padding: 0 10px; color: var(--bc); font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
     .benefit-purchases { display: grid; gap: 0; border-top: 1px solid var(--line); padding-top: 8px; }
-    .benefit-purchase { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 7px 2px; font-size: 12px; }
+    .benefit-purchase { display: grid; grid-template-columns: minmax(0, 1fr) auto 30px; gap: 8px; align-items: center; padding: 7px 2px; font-size: 12px; }
     .benefit-purchase + .benefit-purchase { border-top: 1px solid var(--hair); }
     .benefit-purchase span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .benefit-purchase b { font-variant-numeric: tabular-nums; }
     .benefit-purchase small { display: block; margin-top: 2px; color: var(--muted); }
     .benefit-empty { padding: 8px 2px 1px; color: var(--muted); font-size: 11.5px; }
+    .benefit-spend-add { display: grid; grid-template-columns: minmax(110px, 1fr) 110px 125px 140px auto; gap: 6px; padding-top: 10px; border-top: 1px dashed var(--line); }
+    .benefit-spend-add .input { min-width: 0; min-height: 36px; padding: 0 9px; font-size: 11.5px; }
+    .benefit-spend-add button { min-height: 36px; padding: 0 11px; border: 0; border-radius: 9px; background: var(--bc); color: #fff; font-size: 11.5px; font-weight: 700; }
     .voucher-panel { border-top: 1px solid var(--line); padding-top: 18px; display: grid; gap: 12px; }
     .voucher-add { display: grid; grid-template-columns: 1fr 150px 150px auto; gap: 9px; }
     .voucher-add button { min-height: 42px; padding: 0 16px; }
@@ -630,7 +634,10 @@
       .benefit-summary { grid-template-columns: 1fr; }
       .benefit-category-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .benefit-grid { grid-template-columns: 1fr; }
-      .benefit-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .benefit-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .benefit-spend-add { grid-template-columns: 1fr 1fr; }
+      .benefit-spend-add .benefit-spend-name { grid-column: 1 / -1; }
+      .benefit-spend-add button { grid-column: 1 / -1; }
       .voucher-add { grid-template-columns: 1fr 1fr; }
       .voucher-add .voucher-name { grid-column: 1 / -1; }
       .voucher-add button { grid-column: 1 / -1; }
@@ -1291,9 +1298,13 @@
     function benefitMonthKey() {
       return state.benefitMonth && state.months.some((m) => m.key === state.benefitMonth) ? state.benefitMonth : state.months[state.months.length - 1].key;
     }
-    function benefitBalance(key, throughMonth) {
+    function benefitBalance(key, throughMonth, mode) {
       const account = state.benefits.accounts[key];
-      return state.months.filter((month) => month.key <= throughMonth).reduce((total, month) => total + Number(account.credits[month.key] || 0) - benefitMovementSpent(key, month.key) - Number(account.converted[month.key] || 0), 0);
+      const useActual = mode === "actual";
+      return state.months.filter((month) => month.key <= throughMonth).reduce((total, month) => total + Number(account.credits[month.key] || 0) - (useActual ? benefitMovementSpent(key, month.key) : benefitMovementProjected(key, month.key)) - Number(account.converted[month.key] || 0), 0);
+    }
+    function benefitMovementProjected(key, monthKey) {
+      return state.items.filter((entry) => entry.paymentSource === key).reduce((total, entry) => total + Number(entry.amounts[monthKey] || 0), 0);
     }
     function benefitMovementSpent(key, monthKey) {
       return state.items.filter((entry) => entry.paymentSource === key).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
@@ -1304,6 +1315,7 @@
       const monthKey = benefitMonthKey();
       state.benefitMonth = monthKey;
       const flashBalance = benefitKeys().reduce((total, key) => total + benefitBalance(key, monthKey), 0);
+      const actualFlashBalance = benefitKeys().reduce((total, key) => total + benefitBalance(key, monthKey, "actual"), 0);
       const voucherBalance = state.benefits.vouchers.filter((voucher) => voucher.month <= monthKey).reduce((total, voucher) => total + voucherRemaining(voucher), 0);
       const monthUsed = benefitKeys().reduce((total, key) => total + benefitMovementSpent(key, monthKey), 0);
       return `<div class="card benefits-view">
@@ -1312,7 +1324,7 @@
           <label class="month-pick">Mês <select onchange="setBenefitMonth(this.value)">${state.months.map((month) => `<option value="${month.key}" ${month.key === monthKey ? "selected" : ""}>${month.label}</option>`).join("")}</select></label>
         </div>
         <div class="benefit-summary">
-          <div class="benefit-kpi"><span>No cartão Flash</span><b>${money(flashBalance)}</b></div>
+          <div class="benefit-kpi"><span>No cartão Flash · previsto</span><b>${money(flashBalance)}</b><small>Atual ${money(actualFlashBalance)}</small></div>
           <div class="benefit-kpi"><span>Em vales-presente</span><b>${money(voucherBalance)}</b></div>
           <div class="benefit-kpi total"><span>Total disponível</span><b>${money(flashBalance + voucherBalance)}</b></div>
         </div>
@@ -1338,19 +1350,28 @@
       const meta = benefitMeta(key);
       const account = state.benefits.accounts[key];
       const flowSpent = benefitMovementSpent(key, monthKey);
+      const projectedSpent = benefitMovementProjected(key, monthKey);
       const purchases = state.items.filter((entry) => entry.paymentSource === key && (Number(entry.amounts[monthKey] || 0) !== 0 || Number(entry.actuals && entry.actuals[monthKey] || 0) !== 0));
       return `<section class="benefit-card" style="--bc:${meta.color}">
-        <header><strong>${meta.label}</strong><span class="benefit-balance">${money(benefitBalance(key, monthKey))}</span></header>
+        <header><strong>${meta.label}</strong><span class="benefit-balance" title="Saldo atual ${money(benefitBalance(key, monthKey, "actual"))}">${money(benefitBalance(key, monthKey))}</span></header>
         <div class="benefit-fields">
           <label>Crédito no mês<input type="number" min="0" step="0.01" inputmode="decimal" value="${account.credits[monthKey] || ""}" onchange="updateBenefit('${key}','credits','${monthKey}',this.value)" /></label>
-          <label>Gastos no cartão<span class="benefit-readonly" title="Soma dos lançamentos realizados no fluxo">${money(flowSpent)}</span></label>
+          <label>Gasto previsto<span class="benefit-readonly">${money(projectedSpent)}</span></label>
+          <label>Gasto realizado<span class="benefit-readonly">${money(flowSpent)}</span></label>
           <label>Convertido<span class="benefit-readonly" title="Calculado pelos vales-presente registrados">${money(account.converted[monthKey] || 0)}</span></label>
         </div>
         <div class="benefit-purchases">${purchases.length ? purchases.map((entry) => {
           const projected = Number(entry.amounts[monthKey] || 0);
           const actual = Number(entry.actuals && entry.actuals[monthKey] || 0);
-          return `<div class="benefit-purchase"><span>${attr(entry.name)}<small>Projetado ${money(projected)}</small></span><b>${actual > 0 ? money(actual) : "pendente"}</b></div>`;
+          return `<div class="benefit-purchase"><span>${attr(entry.name)}<small>${purposeLabel(entry.purpose)} · previsto ${money(projected)}</small></span><b>${actual > 0 ? money(actual) : "pendente"}</b><button class="minibtn danger" type="button" title="Remover deste mês" onclick="updateAmount('${entry.id}','${monthKey}',0)">×</button></div>`;
         }).join("") : `<div class="benefit-empty">Nenhum gasto lançado com este benefício no mês.</div>`}</div>
+        <div class="benefit-spend-add">
+          <input class="input benefit-spend-name" placeholder="Novo gasto" />
+          <div class="money-field"><input class="input benefit-spend-value" type="number" min="0" step="0.01" inputmode="decimal" placeholder="valor" /></div>
+          <select class="input benefit-spend-bucket">${bucketOrder().map((bucket) => `<option value="${bucket}">${bucketLabel(bucket)}</option>`).join("")}</select>
+          <select class="input benefit-spend-purpose">${purposeOptions("personal")}</select>
+          <button type="button" onclick="addBenefitExpense('${key}','${monthKey}',this)">Lançar gasto</button>
+        </div>
       </section>`;
     }
 
@@ -1370,6 +1391,21 @@
       const account = state.benefits.accounts[key];
       const value = Math.max(0, numberValue(rawValue));
       if (value === 0) delete account[field][monthKey]; else account[field][monthKey] = value;
+      render();
+    }
+    function addBenefitExpense(key, monthKey, button) {
+      const root = button.closest(".benefit-spend-add");
+      const name = root.querySelector(".benefit-spend-name").value.trim();
+      const value = Math.max(0, numberValue(root.querySelector(".benefit-spend-value").value));
+      const bucket = root.querySelector(".benefit-spend-bucket").value;
+      const purpose = root.querySelector(".benefit-spend-purpose").value;
+      if (!name || value <= 0) { root.querySelector(!name ? ".benefit-spend-name" : ".benefit-spend-value").focus(); return; }
+      const entry = item(`benefit-${Date.now()}`, name, "expense", { [monthKey]: value }, bucket);
+      entry.paymentSource = key;
+      entry.purpose = purpose;
+      entry.actuals[monthKey] = value;
+      entry.done[monthKey] = true;
+      state.items.push(entry);
       render();
     }
     function addVoucher(monthKey) {
