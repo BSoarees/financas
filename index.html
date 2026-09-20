@@ -533,11 +533,10 @@
       .kpi { min-width: 0; }
       .kpi b { font-size: clamp(14px, 4.2vw, 17px); }
 
-      .toolbar { flex-wrap: nowrap; gap: 8px; }
-      .tabs { overflow-x: auto; flex: 1; scrollbar-width: none; }
-      .tabs::-webkit-scrollbar { display: none; }
-      .tabs button { white-space: nowrap; padding: 0 13px; }
-      #addMonthBtn { flex: 0 0 auto; }
+      .toolbar { flex-wrap: wrap; gap: 8px; }
+      .tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; overflow: visible; }
+      .tabs button { min-width: 0; white-space: nowrap; padding: 0 7px; font-size: 12px; }
+      #addMonthBtn { flex: 0 0 auto; margin-left: auto; }
 
       .mstrip { display: flex; overflow-x: auto; scrollbar-width: none; }
       .mstrip::-webkit-scrollbar { display: none; }
