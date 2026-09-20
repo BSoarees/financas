@@ -191,6 +191,10 @@
     .budget-kpi-clean.result span, .budget-kpi-clean.result small { color: rgba(255,255,255,.62); }
     .budget-equation { padding: 10px 12px; border-radius: 10px; background: var(--surface-2); color: var(--ink-2); font-size: 12px; line-height: 1.45; }
     .budget-equation b { color: var(--ink); }
+    .purpose-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .purpose-kpi { padding: 10px 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); }
+    .purpose-kpi span { display: block; color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .purpose-kpi b { display: block; margin-top: 3px; font-size: 14px; font-variant-numeric: tabular-nums; }
     .budget-columns { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(260px, .7fr); gap: 14px; align-items: start; }
     .budget-panel { border: 1px solid var(--line); border-radius: 13px; overflow: hidden; background: var(--surface); }
     .budget-panel-title { padding: 12px 14px; border-bottom: 1px solid var(--line); background: var(--surface-2); font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
@@ -336,7 +340,8 @@
     .mrow-main { min-width: 0; display: grid; gap: 4px; justify-items: start; }
     .mrow-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
     .mrow-name em { font-style: normal; font-size: 11px; color: var(--muted); margin-left: 8px; }
-    .payment-select { min-height: 27px; max-width: 180px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); padding: 1px 9px; color: var(--ink-2); font-size: 11px; font-weight: 700; }
+    .mrow-controls { display: flex; flex-wrap: wrap; gap: 5px; }
+    .payment-select, .purpose-select { min-height: 27px; max-width: 180px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); padding: 1px 9px; color: var(--ink-2); font-size: 11px; font-weight: 700; }
     .money-mini { position: relative; justify-self: end; }
     .money-mini::after { content: attr(data-label); position: absolute; top: -9px; right: 8px; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
     .money-mini::before { content: "R$"; position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--muted); pointer-events: none; }
@@ -473,6 +478,7 @@
     .addpurchase .pu-name { flex: 1 1 150px; }
     .addpurchase .money-field { flex: 0 0 130px; }
     .addpurchase .pu-mode { width: 118px; }
+    .addpurchase .pu-purpose { width: 150px; }
     .addpurchase .pu-n { width: 62px; text-align: center; }
     .addpurchase .ghost { min-height: 38px; padding: 0 16px; border: 0; background: var(--ink); color: #fff; border-radius: 10px; font-weight: 600; }
     .pu-list { display: grid; gap: 2px; }
@@ -481,7 +487,7 @@
     .pu-paid { display: flex; align-items: center; gap: 8px; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--good); background: var(--good-soft); border-radius: 8px; padding: 8px 10px; cursor: pointer; }
     .pu-paid-hint { font-size: 11px; font-weight: 500; color: var(--muted); }
     .pu-paid-tag { font-size: 12px; font-weight: 600; color: var(--good); cursor: pointer; padding: 2px 4px 6px; }
-    .pu-row.editing { grid-template-columns: minmax(140px, 1fr) 120px 150px 120px 70px 140px auto auto; }
+    .pu-row.editing { grid-template-columns: minmax(140px, 1fr) 120px 150px 150px 120px 70px 140px auto auto; }
     .pu-nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .pu-b { font-size: 11px; font-weight: 700; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; }
     .pu-v { font-variant-numeric: tabular-nums; font-weight: 700; }
@@ -603,7 +609,7 @@
       .mrow > .kind-dot { display: none; }
       .mrow > .mrow-main { grid-area: name; align-self: center; min-width: 0; }
       .mrow-main .mrow-name { white-space: normal; }
-      .payment-select { width: 100%; max-width: 210px; min-height: 30px; }
+      .payment-select, .purpose-select { max-width: 210px; min-height: 30px; }
       .mrow > .money-mini:nth-of-type(1) { grid-area: projected; }
       .mrow > .money-mini:nth-of-type(2) { grid-area: actual; }
       .mrow > .mrow-actions { grid-area: actions; align-self: center; }
@@ -620,6 +626,7 @@
       .budget-clean { padding: 16px; }
       .budget-kpis-clean { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .budget-columns { grid-template-columns: 1fr; }
+      .purpose-summary { grid-template-columns: 1fr; }
       .benefit-summary { grid-template-columns: 1fr; }
       .benefit-category-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .benefit-grid { grid-template-columns: 1fr; }
@@ -709,6 +716,13 @@
             <option value="refeicao">Flash · Refeição</option>
             <option value="mobilidade">Flash · Mobilidade</option>
             <option value="homeoffice">Flash · Home office</option>
+          </select>
+        </label>
+        <label class="field" id="purposeField"><span>Finalidade</span>
+          <select id="purposeInput" class="input">
+            <option value="personal">Pessoal</option>
+            <option value="work">Trabalho</option>
+            <option value="reimbursable">Trabalho reembolsável</option>
           </select>
         </label>
         <button class="btn-primary" id="addBtn" type="button">＋ Adicionar</button>
@@ -860,6 +874,7 @@
         if (entry.kind === "income") { entry.bucket = null; return; }
         if (!entry.bucket) entry.bucket = defaultBucket(entry.kind);
         if (!entry.paymentSource) entry.paymentSource = "cash";
+        if (entry.kind === "expense" && !entry.purpose) entry.purpose = "personal";
         if (entry.cardId === undefined) entry.cardId = null;
         if (entry.recurring && typeof entry.recurring === "object") {
           const recurringAmount = Number(entry.recurring.amount || 0);
@@ -1259,6 +1274,11 @@
       return [{ key: "cash", label: "Conta / dinheiro" }, ...benefitKeys().map((key) => ({ key, label: `Flash · ${benefitMeta(key).label}` }))]
         .map((option) => `<option value="${option.key}" ${option.key === selected ? "selected" : ""}>${option.label}</option>`).join("");
     }
+    function purposeOptions(selected) {
+      return [{ key: "personal", label: "Pessoal" }, { key: "work", label: "Trabalho" }, { key: "reimbursable", label: "Trabalho reembolsável" }]
+        .map((option) => `<option value="${option.key}" ${option.key === selected ? "selected" : ""}>${option.label}</option>`).join("");
+    }
+    function purposeLabel(purpose) { return ({ personal: "Pessoal", work: "Trabalho", reimbursable: "Trabalho reembolsável" })[purpose] || "Pessoal"; }
     function benefitMonthKey() {
       return state.benefitMonth && state.months.some((m) => m.key === state.benefitMonth) ? state.benefitMonth : state.months[state.months.length - 1].key;
     }
@@ -1411,6 +1431,9 @@
           ${budgetKpi("Saldo ao fim do mês", finalCash, finalActualCash, "result")}
         </div>
         <div class="budget-equation"><b>${money(previousCash)}</b> de saldo anterior + <b>${money(result)}</b> de resultado em ${labelForMonth(selected)} = <b>${money(finalCash)}</b> ao fim do mês. No realizado: ${money(previousActualCash)} + ${money(actualResult)} = ${money(finalActualCash)}.</div>
+        <div class="purpose-summary">
+          ${["personal", "work", "reimbursable"].map((purpose) => `<div class="purpose-kpi"><span>${purposeLabel(purpose)}</span><b>${money(state.items.filter((entry) => entry.kind === "expense" && (entry.purpose || "personal") === purpose).reduce((total, entry) => total + Number(entry.amounts[selected] || 0), 0))}</b></div>`).join("")}
+        </div>
         <div class="budget-columns">
           <section class="budget-panel">
             <div class="budget-panel-title">O que forma as saídas da conta</div>
@@ -1448,14 +1471,14 @@
       })).filter((entry) => entry.projected !== 0 || entry.actual !== 0);
       const itemGroup = (label, entries) => ({
         label,
-        lines: entries.map((entry) => ({ name: entry.name, projected: Number(entry.amounts[monthKey] || 0), actual: Number(entry.actuals && entry.actuals[monthKey] || 0) }))
+        lines: entries.map((entry) => ({ name: entry.name, purpose: entry.kind === "expense" ? purposeLabel(entry.purpose) : "", projected: Number(entry.amounts[monthKey] || 0), actual: Number(entry.actuals && entry.actuals[monthKey] || 0) }))
       });
       const groups = [itemGroup("Despesas diretas", direct), { label: "Faturas de cartão", lines: cards }, itemGroup("Pagamentos de dívidas", debts), itemGroup("Investimentos transferidos", investments)];
       return groups.map((group) => ({ ...group, projected: group.lines.reduce((total, line) => total + line.projected, 0), actual: group.lines.reduce((total, line) => total + line.actual, 0) }));
     }
 
     function budgetCashGroup(group) {
-      return `<div class="cash-group"><div class="cash-group-head"><strong>${group.label}</strong><b>${money(group.projected)}</b></div>${group.lines.length ? group.lines.map((line) => `<div class="cash-line"><span>${attr(line.name)}<small>real ${money(line.actual)}</small></span><b>${money(line.projected)}</b></div>`).join("") : `<div class="cash-empty">Nenhum lançamento neste mês.</div>`}</div>`;
+      return `<div class="cash-group"><div class="cash-group-head"><strong>${group.label}</strong><b>${money(group.projected)}</b></div>${group.lines.length ? group.lines.map((line) => `<div class="cash-line"><span>${attr(line.name)}${line.purpose ? `<small>${line.purpose}</small>` : ""}<small>real ${money(line.actual)}</small></span><b>${money(line.projected)}</b></div>`).join("") : `<div class="cash-empty">Nenhum lançamento neste mês.</div>`}</div>`;
     }
 
     function poteRow(bucket, monthKey, income) {
@@ -1513,6 +1536,7 @@
     }
     function updateItemBucket(itemId, bucket) { const e = state.items.find((c) => c.id === itemId); if (!e) return; e.bucket = bucket; render(); }
     function updatePaymentSource(itemId, source) { const e = state.items.find((c) => c.id === itemId); if (!e) return; e.paymentSource = benefitKeys().includes(source) ? source : "cash"; render(); }
+    function updateItemPurpose(itemId, purpose) { const e = state.items.find((c) => c.id === itemId); if (!e) return; e.purpose = ["work", "reimbursable"].includes(purpose) ? purpose : "personal"; render(); }
     function updateTargetRate(rawValue) { state.targetRate = Math.max(0, numberValue(rawValue)); render(); }
 
     /* ---------- cards view ---------- */
@@ -1573,6 +1597,7 @@
           <input class="input pu-n" type="number" min="1" step="1" value="1" title="parcelas" />
           <select class="input pu-start">${months.map((m) => `<option value="${m.key}" ${m.key === monthKey ? "selected" : ""}>${m.label}</option>`).join("")}</select>
           <select class="input pu-bucket">${bucketOrder().map((b) => `<option value="${b}">${bucketLabel(b)}</option>`).join("")}</select>
+          <select class="input pu-purpose">${purposeOptions("personal")}</select>
           <button class="ghost" type="button" onclick="addCardPurchase('${card.id}', this)">Lançar</button>
         </div>
         ${!purchases.length ? `<div class="pu-empty">Nada em ${monthLabel} neste cartão.</div>`
@@ -1587,8 +1612,17 @@
       const startKey = entry.recurring ? entry.recurring.start : monthKeys[0] || state.months[0].key;
       const installments = Math.max(1, monthKeys.length || 1);
       const recurring = Boolean(entry.recurring);
-      if (cardEditId === entry.id) return `<div class="pu-row editing"><input class="pu-edit edit-name" value="${attr(entry.name)}" title="Nome" /><select class="pu-edit edit-mode" title="Tipo" onchange="toggleCardEditMode(this)"><option value="installment" ${recurring ? "" : "selected"}>Parcelada</option><option value="recurring" ${recurring ? "selected" : ""}>Recorrente</option></select><select class="pu-edit edit-bucket" title="Pote">${bucketOptions(itemBucket(entry))}</select><select class="pu-edit edit-start" title="Mês inicial">${state.months.map((month) => `<option value="${month.key}" ${month.key === startKey ? "selected" : ""}>${month.label}</option>`).join("")}</select><input class="pu-edit edit-n" type="number" min="1" step="1" value="${installments}" title="Número de parcelas" style="display:${recurring ? "none" : "block"}" /><div class="pu-value-wrap"><input class="pu-edit edit-value" type="number" min="0" step="0.01" value="${value}" title="${recurring ? "Valor mensal" : "Valor total"}" /><small>${recurring ? "/mês" : "total"}</small></div><button class="minibtn" type="button" title="Salvar" onclick="saveCardPurchaseEdit('${entry.id}', this)">✓</button><button class="minibtn danger" type="button" title="Cancelar" onclick="cancelCardPurchaseEdit()">×</button></div>`;
-      return `<div class="pu-row"><span class="pu-nm">${entry.name}${entry.recurring ? ` <span class="badge">recorrente</span>` : ""}</span><span class="pu-b">${bucketLabel(itemBucket(entry))}</span><span class="pu-v">${entry.recurring ? `${money(value)}/mês` : money(value)}</span><button class="minibtn" type="button" title="Editar" onclick="editCardPurchase('${entry.id}')">✎</button><button class="minibtn danger" type="button" title="Excluir" onclick="deleteItem('${entry.id}')">×</button></div>`;
+      if (cardEditId === entry.id) return `<div class="pu-row editing">
+        <input class="pu-edit edit-name" value="${attr(entry.name)}" title="Nome" />
+        <select class="pu-edit edit-mode" title="Tipo" onchange="toggleCardEditMode(this)"><option value="installment" ${recurring ? "" : "selected"}>Parcelada</option><option value="recurring" ${recurring ? "selected" : ""}>Recorrente</option></select>
+        <select class="pu-edit edit-bucket" title="Pote">${bucketOptions(itemBucket(entry))}</select>
+        <select class="pu-edit edit-purpose" title="Finalidade">${purposeOptions(entry.purpose || "personal")}</select>
+        <select class="pu-edit edit-start" title="Mês inicial">${state.months.map((month) => `<option value="${month.key}" ${month.key === startKey ? "selected" : ""}>${month.label}</option>`).join("")}</select>
+        <input class="pu-edit edit-n" type="number" min="1" step="1" value="${installments}" title="Número de parcelas" style="display:${recurring ? "none" : "block"}" />
+        <div class="pu-value-wrap"><input class="pu-edit edit-value" type="number" min="0" step="0.01" value="${value}" title="${recurring ? "Valor mensal" : "Valor total"}" /><small>${recurring ? "/mês" : "total"}</small></div>
+        <button class="minibtn" type="button" title="Salvar" onclick="saveCardPurchaseEdit('${entry.id}', this)">✓</button><button class="minibtn danger" type="button" title="Cancelar" onclick="cancelCardPurchaseEdit()">×</button>
+      </div>`;
+      return `<div class="pu-row"><span class="pu-nm">${entry.name}${entry.recurring ? ` <span class="badge">recorrente</span>` : ""} <small>${purposeLabel(entry.purpose)}</small></span><span class="pu-b">${bucketLabel(itemBucket(entry))}</span><span class="pu-v">${entry.recurring ? `${money(value)}/mês` : money(value)}</span><button class="minibtn" type="button" title="Editar" onclick="editCardPurchase('${entry.id}')">✎</button><button class="minibtn danger" type="button" title="Excluir" onclick="deleteItem('${entry.id}')">×</button></div>`;
     }
 
     function addCard() {
@@ -1614,18 +1648,22 @@
       const n = Math.max(1, Math.round(numberValue(root.querySelector(".pu-n").value) || 1));
       const startKey = root.querySelector(".pu-start").value;
       const bucket = root.querySelector(".pu-bucket").value;
+      const purpose = root.querySelector(".pu-purpose").value;
       if (!name || total <= 0) return;
       const amounts = {};
       const idx = state.months.findIndex((m) => m.key === startKey);
       if (mode === "recurring") {
         for (let i = idx; i < state.months.length; i++) amounts[state.months[i].key] = total;
         const entry = item(`buy-${Date.now()}`, name, "expense", amounts, bucket, cardId);
+        entry.purpose = purpose;
         entry.recurring = { start: startKey, amount: total };
         state.items.push(entry);
       } else {
         const parcela = Math.round(total / n * 100) / 100;
         for (let i = 0; i < n; i++) { const m = state.months[idx + i]; if (!m) break; amounts[m.key] = parcela; }
-        state.items.push(item(`buy-${Date.now()}`, n > 1 ? `${name} (${n}x)` : name, "expense", amounts, bucket, cardId));
+        const entry = item(`buy-${Date.now()}`, n > 1 ? `${name} (${n}x)` : name, "expense", amounts, bucket, cardId);
+        entry.purpose = purpose;
+        state.items.push(entry);
       }
       render();
     }
@@ -1658,6 +1696,7 @@
       if (!entry || !name || value <= 0) return;
       entry.name = name;
       entry.bucket = row.querySelector(".edit-bucket").value;
+      entry.purpose = row.querySelector(".edit-purpose").value;
       entry.amounts = {};
       if (mode === "recurring") {
         entry.recurring = { start: startKey, amount: value };
@@ -1787,6 +1826,7 @@
         <input class="input da-name" placeholder="O que foi? (ex: farmácia)" />
         <div class="money-field"><input class="input da-val" type="number" step="0.01" inputmode="decimal" placeholder="valor" /></div>
         <select class="input da-bucket">${bucketOrder().map((b) => `<option value="${b}" ${b === "necessidades" ? "selected" : ""}>${bucketLabel(b)}</option>`).join("")}</select>
+        <select class="input da-purpose">${purposeOptions("personal")}</select>
         <select class="input da-source">${paymentOptions("cash")}</select>
         <button class="da-btn" type="button" onclick="addDayExpense('${monthKey}', this)">Lançar</button>
       </div>`;
@@ -1797,9 +1837,11 @@
       const name = root.querySelector(".da-name").value.trim();
       const val = numberValue(root.querySelector(".da-val").value);
       const bucket = root.querySelector(".da-bucket").value;
+      const purpose = root.querySelector(".da-purpose").value;
       const source = root.querySelector(".da-source").value;
       if (!name || val <= 0) { root.querySelector(".da-name").focus(); return; }
       const entry = item(`day-${Date.now()}`, name, "expense", { [monthKey]: val }, bucket);
+      entry.purpose = purpose;
       entry.paymentSource = source;
       entry.actuals[monthKey] = val;
       entry.done[monthKey] = true;
@@ -1845,7 +1887,7 @@
       return `<div class="mrow ${done ? "done" : partial ? "partial" : ""}">
         <button class="rowcheck ${done ? "on" : partial ? "partial" : ""}" type="button" title="${done ? "Feito (clique pra desmarcar)" : partial ? "Parcial (clique para completar)" : "Marcar como feito"}" onclick="toggleDone('${entry.id}', '${monthKey}')">${done ? "✓" : partial ? "–" : ""}</button>
         ${lead}
-        <div class="mrow-main"><span class="mrow-name">${entry.name}</span>${entry.kind === "expense" ? `<select class="payment-select" title="Forma de pagamento" onchange="updatePaymentSource('${entry.id}',this.value)">${paymentOptions(entry.paymentSource || "cash")}</select>` : ""}</div>
+        <div class="mrow-main"><span class="mrow-name">${entry.name}</span>${entry.kind === "expense" ? `<div class="mrow-controls"><select class="purpose-select" title="Finalidade" onchange="updateItemPurpose('${entry.id}',this.value)">${purposeOptions(entry.purpose || "personal")}</select><select class="payment-select" title="Forma de pagamento" onchange="updatePaymentSource('${entry.id}',this.value)">${paymentOptions(entry.paymentSource || "cash")}</select></div>` : ""}</div>
         <div class="money-mini" data-label="projetado"><input class="mrow-val" type="number" step="0.01" inputmode="decimal" value="${entry.amounts[monthKey] || ""}" onchange="updateAmount('${entry.id}', '${monthKey}', this.value)" /></div>
         <div class="money-mini" data-label="realizado"><input class="mrow-val" type="number" step="0.01" inputmode="decimal" placeholder="—" value="${entry.actuals && entry.actuals[monthKey] != null ? entry.actuals[monthKey] : ""}" onchange="updateActual('${entry.id}', '${monthKey}', this.value)" /></div>
         <div class="mrow-actions">
@@ -2064,10 +2106,12 @@
       const endKey = frequency === "oneoff" ? startKey : document.getElementById("endInput").value;
       const bucket = kind === "income" ? null : composerBucket;
       const paymentSource = kind === "expense" ? document.getElementById("paymentInput").value : "cash";
+      const purpose = kind === "expense" ? document.getElementById("purposeInput").value : "personal";
       const amounts = {};
       state.months.forEach((m) => { if (m.key < startKey || m.key > endKey) return; amounts[m.key] = amount; });
       const entry = item(`${Date.now()}`, name, kind, amounts, bucket);
       entry.paymentSource = paymentSource;
+      entry.purpose = purpose;
       state.items.push(entry);
       document.getElementById("nameInput").value = "";
       document.getElementById("amountInput").value = "";
@@ -2139,6 +2183,7 @@
       document.querySelectorAll("#kindSeg button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.kind === composerKind)));
       document.getElementById("bucketField").style.display = composerKind === "income" ? "none" : "grid";
       document.getElementById("paymentField").style.display = composerKind === "expense" ? "grid" : "none";
+      document.getElementById("purposeField").style.display = composerKind === "expense" ? "grid" : "none";
       document.querySelectorAll("#bucketChips button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.bucket === composerBucket)));
       updateFrequencyUi();
     }
