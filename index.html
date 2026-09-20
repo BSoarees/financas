@@ -277,15 +277,23 @@
     /* ---------- months view ---------- */
     .pos { color: var(--good); } .neg { color: var(--crit); }
     .months2 { display: grid; gap: 16px; }
-    .mstrip { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 8px; }
+    .mstrip { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 8px; }
     .mchip { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow-sm); text-align: left; transition: transform 0.14s, border-color 0.14s; }
     .mchip:hover { border-color: #c7cdc3; transform: translateY(-1px); }
     .mchip.active { background: var(--ink); border-color: var(--ink); }
     .mc-label { font-size: 13px; font-weight: 700; color: var(--ink); }
     .mc-cash { font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 600; }
+    .mc-balance { display: grid; gap: 1px; padding-top: 3px; border-top: 1px solid var(--line); }
+    .mc-balance:first-of-type { border-top: 0; padding-top: 0; }
+    .mc-balance small { color: var(--muted); font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
     .mchip.active .mc-label { color: #fff; }
     .mchip.active .mc-cash { color: #cfe0f6; }
     .mchip.active .mc-cash.neg { color: #f3b0b0; }
+    .mchip.active .mc-balance { border-color: rgba(255,255,255,.14); }
+    .mchip.active .mc-balance small { color: rgba(255,255,255,.58); }
+    .mc-free { color: var(--good); }
+    .mchip.active .mc-free { color: #8fe6ae; }
+    .mchip.active .mc-free.neg { color: #f3b0b0; }
 
     .mpanel { padding: 22px 24px; display: grid; gap: 18px; }
     .mpanel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -645,7 +653,7 @@
 
       .mstrip { display: flex; overflow-x: auto; scrollbar-width: none; }
       .mstrip::-webkit-scrollbar { display: none; }
-      .mchip { flex: 0 0 auto; min-width: 96px; }
+      .mchip { flex: 0 0 auto; min-width: 116px; }
       .mpanel { padding: 16px; }
       .mstats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
       .account-balances { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1937,7 +1945,8 @@
         <div class="mstrip">
           ${totals.map((t) => `<button class="mchip ${t.month.key === selKey ? "active" : ""}" type="button" onclick="setMonthSel('${t.month.key}')">
             <span class="mc-label">${t.month.label}</span>
-            <span class="mc-cash ${t.cash < 0 ? "neg" : "pos"}">${money(t.cash)}</span>
+            <span class="mc-balance"><small>Conta · inclui reserva</small><span class="mc-cash ${t.cash < 0 ? "neg" : "pos"}">${money(t.cash)}</span></span>
+            <span class="mc-balance"><small>Disponível livre</small><span class="mc-cash mc-free ${(t.cash - monthReserveBalance(t.month.key)) < 0 ? "neg" : "pos"}">${money(t.cash - monthReserveBalance(t.month.key))}</span></span>
           </button>`).join("")}
         </div>
         <div class="card mpanel">
