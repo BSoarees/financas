@@ -588,6 +588,7 @@
     .inv-legend-row { display: grid; grid-template-columns: 9px 1fr auto; align-items: center; gap: 7px; font-size: 11px; }
     .inv-legend-row i { width: 9px; height: 9px; border-radius: 3px; }
     .inv-legend-row b { font-variant-numeric: tabular-nums; }
+    .inv-legend-row.zero { opacity: .48; }
     .inv-add-asset, .inv-event-form { display: grid; grid-template-columns: 1.1fr .9fr 1fr auto; gap: 8px; margin-top: 14px; }
     .inv-add-asset input, .inv-add-asset select, .inv-event-form input, .inv-event-form select { min-width: 0; }
     .inv-assets-list { display: grid; gap: 10px; margin-top: 14px; }
@@ -957,6 +958,7 @@
       if (!target.investments || typeof target.investments !== "object") target.investments = {};
       if (!Array.isArray(target.investments.assets)) target.investments.assets = [];
       if (!Array.isArray(target.investments.events)) target.investments.events = [];
+      target.investments.assets.forEach((asset) => { asset.category = normalizeInvestmentCategory(asset.category); });
     }
 
     function ensureBenefits(target) {
@@ -2137,7 +2139,11 @@
     /* ---------- debts ---------- */
     function investmentCategories() { return { renda_fixa: "Renda fixa", renda_variavel: "Renda variável", acoes: "Ações", fundos_imobiliarios: "Fundos imobiliários", criptomoedas: "Criptomoedas", fundos: "Fundos", previdencia: "Previdência", exterior: "Exterior", outros: "Outros" }; }
     function investmentColors() { return ["#151b17", "#18a957", "#3478d4", "#7555c7", "#e48731", "#d4485f", "#16a3a3", "#8c956f", "#9a6b48"]; }
-    function investmentCategoryLabel(key) { return investmentCategories()[key] || key; }
+    function normalizeInvestmentCategory(value) {
+      const key = String(value || "outros").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+      return ({ variavel: "renda_variavel", renda_variavel: "renda_variavel", renda_fixa: "renda_fixa", acao: "acoes", acoes: "acoes", fii: "fundos_imobiliarios", fiis: "fundos_imobiliarios", fundo_imobiliario: "fundos_imobiliarios", fundos_imobiliarios: "fundos_imobiliarios", cripto: "criptomoedas", criptomoeda: "criptomoedas", criptomoedas: "criptomoedas" })[key] || (investmentCategories()[key] ? key : "outros");
+    }
+    function investmentCategoryLabel(key) { return investmentCategories()[normalizeInvestmentCategory(key)]; }
     function investmentEvents(assetId, throughDate) { return state.investments.events.filter((e) => (!assetId || e.assetId === assetId) && (!throughDate || e.date <= throughDate)).sort((a, b) => a.date.localeCompare(b.date) || String(a.id).localeCompare(String(b.id))); }
     function assetMetrics(assetId, throughDate) {
       let value = 0, contributions = 0, grossWithdrawals = 0, netWithdrawals = 0, tax = 0;
@@ -2153,8 +2159,12 @@
       return `<div class="inv-chart"><svg viewBox="0 0 640 210" role="img" aria-label="Evolução do patrimônio"><line x1="24" y1="184" x2="616" y2="184" stroke="#dfe3df"/><polygon points="24,184 ${points} 616,184" fill="rgba(24,169,87,.10)"/><polyline points="${points}" fill="none" stroke="#18a957" stroke-width="3"/>${s.map((p, i) => `<circle cx="${xy(p, i).split(",")[0]}" cy="${xy(p, i).split(",")[1]}" r="4" fill="#fff" stroke="#18a957" stroke-width="2"><title>${p.date}: ${money(p.value)}</title></circle>`).join("")}</svg><div class="inv-chart-labels"><span>${s[0].date.split("-").reverse().join("/")}</span><b>${money(s.at(-1).value)}</b><span>${s.at(-1).date.split("-").reverse().join("/")}</span></div></div>`;
     }
     function diversificationChart() {
-      const grouped = {}; state.investments.assets.forEach((a) => grouped[a.category] = (grouped[a.category] || 0) + assetMetrics(a.id).value); const entries = Object.entries(grouped).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]); const total = entries.reduce((s, [, v]) => s + v, 0); let cursor = 0; const colors = investmentColors(); const stops = entries.map(([, v], i) => { const start = cursor; cursor += v / total * 100; return `${colors[i % colors.length]} ${start}% ${cursor}%`; });
-      return `<div class="inv-donut-wrap"><div class="inv-donut" style="background:${total ? `conic-gradient(${stops.join(",")})` : "#e8ebe8"}"></div><div class="inv-legend">${entries.length ? entries.map(([cat, v], i) => `<div class="inv-legend-row"><i style="background:${colors[i % colors.length]}"></i><span>${investmentCategoryLabel(cat)}</span><b>${(v / total * 100).toFixed(1)}%</b></div>`).join("") : `<div class="empty">Sem saldo investido.</div>`}</div></div>`;
+      const grouped = Object.fromEntries(Object.keys(investmentCategories()).map((key) => [key, { value: 0, assets: 0 }]));
+      state.investments.assets.forEach((asset) => { const category = normalizeInvestmentCategory(asset.category); grouped[category].value += assetMetrics(asset.id).value; grouped[category].assets += 1; });
+      const entries = Object.entries(grouped).sort((a, b) => b[1].value - a[1].value); const positive = entries.filter(([, item]) => item.value > 0); const total = positive.reduce((sum, [, item]) => sum + item.value, 0); let cursor = 0; const colors = investmentColors();
+      const colorByCategory = Object.fromEntries(Object.keys(investmentCategories()).map((key, index) => [key, colors[index % colors.length]]));
+      const stops = positive.map(([category, item]) => { const start = cursor; cursor += item.value / total * 100; return `${colorByCategory[category]} ${start}% ${cursor}%`; });
+      return `<div class="inv-donut-wrap"><div class="inv-donut" style="background:${total ? `conic-gradient(${stops.join(",")})` : "#e8ebe8"}"></div><div class="inv-legend">${entries.map(([category, item]) => `<div class="inv-legend-row ${item.value > 0 ? "" : "zero"}"><i style="background:${colorByCategory[category]}"></i><span>${investmentCategoryLabel(category)}${item.assets ? ` · ${item.assets} ativo${item.assets > 1 ? "s" : ""}` : ""}</span><b>${total ? (item.value / total * 100).toFixed(1) : "0.0"}%</b></div>`).join("")}</div></div>`;
     }
     function investmentsView() {
       const total = portfolioMetrics(), pct = total.contributions > 0 ? total.gain / total.contributions * 100 : 0, cats = investmentCategories(), assets = state.investments.assets, events = [...state.investments.events].sort((a, b) => b.date.localeCompare(a.date));
