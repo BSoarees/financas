@@ -380,6 +380,11 @@
     .benefit-kpi b { display: block; margin-top: 5px; font-size: 20px; font-variant-numeric: tabular-nums; }
     .benefit-kpi.total { background: #171b18; color: #fff; border-color: #171b18; }
     .benefit-kpi.total span { color: rgba(255,255,255,.62); }
+    .benefit-category-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .benefit-category-kpi { --bc: var(--accent); min-width: 0; padding: 11px 12px; border: 1px solid color-mix(in srgb, var(--bc) 20%, var(--line)); border-radius: 12px; background: color-mix(in srgb, var(--bc) 6%, var(--surface)); }
+    .benefit-category-kpi span { display: flex; align-items: center; gap: 6px; color: var(--ink-2); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .benefit-category-kpi span::before { content: ""; width: 7px; height: 7px; flex: 0 0 auto; border-radius: 2px; background: var(--bc); }
+    .benefit-category-kpi b { display: block; margin-top: 5px; overflow: hidden; color: var(--bc); font-size: 15px; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
     .benefit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .benefit-card { --bc: var(--accent); padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-2); display: grid; gap: 13px; }
     .benefit-card header { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
@@ -575,6 +580,7 @@
       .mrow.cardrow .rowcheck { grid-area: check; align-self: center; } .mrow.cardrow .kind-dot { display: none; } .mrow.cardrow .mrow-name { grid-area: name; } .mrow.cardrow .cardpay { grid-area: pay; justify-self: start; }
       .benefits-view { padding: 16px; }
       .benefit-summary { grid-template-columns: 1fr; }
+      .benefit-category-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .benefit-grid { grid-template-columns: 1fr; }
       .benefit-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .voucher-add { grid-template-columns: 1fr 1fr; }
@@ -1228,6 +1234,10 @@
           <div class="benefit-kpi"><span>Em vales-presente</span><b>${money(voucherBalance)}</b></div>
           <div class="benefit-kpi total"><span>Total disponível</span><b>${money(flashBalance + voucherBalance)}</b></div>
         </div>
+        <div class="benefit-category-summary">${benefitKeys().map((key) => {
+          const meta = benefitMeta(key);
+          return `<div class="benefit-category-kpi" style="--bc:${meta.color}"><span>${meta.label}</span><b>${money(benefitBalance(key, monthKey))}</b></div>`;
+        }).join("")}</div>
         <div class="benefit-grid">${benefitKeys().map((key) => benefitCard(key, monthKey)).join("")}</div>
         <div class="voucher-panel">
           <div class="section-head"><div><h2 class="panel-title">Vales-presente</h2><p class="hint">A conversão sai do saldo Flash e continua aqui até o vale ser usado.</p></div><span class="hint">Uso direto no mês: ${money(monthUsed)}</span></div>
