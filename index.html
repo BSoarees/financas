@@ -397,7 +397,6 @@
     .cell-input:focus { outline: none; background: var(--surface); border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
     .item-actions { margin-left: auto; display: flex; gap: 4px; opacity: 0; transition: opacity 0.14s; }
     tr:hover .item-actions { opacity: 1; }
-
     /* ---------- debts ---------- */
     .debt-line { border-top: 1px solid var(--line); font-size: 13px; }
     .debt-line:first-child { border-top: 0; }
@@ -565,6 +564,45 @@
     .ps-done { font-size: 12px; color: var(--good); font-weight: 600; }
     .linkbtn { border: 0; background: none; color: var(--crit); font-weight: 600; cursor: pointer; text-decoration: underline; padding: 0; font-size: 12px; }
     .deldebt { margin-left: auto; }
+    .investments-view { display: grid; gap: 16px; }
+    .inv-head, .inv-panel, .inv-assets { padding: 20px; }
+    .inv-headline { display: flex; align-items: start; justify-content: space-between; gap: 16px; }
+    .inv-headline h2 { margin: 0 0 4px; font-size: 24px; }
+    .inv-headline p { margin: 0; color: var(--muted); font-size: 13px; }
+    .inv-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+    .inv-kpi { border: 1px solid var(--line); border-radius: 12px; padding: 13px; background: var(--surface-2); display: grid; gap: 5px; }
+    .inv-kpi span { color: var(--muted); font-size: 10px; font-weight: 750; text-transform: uppercase; letter-spacing: .04em; }
+    .inv-kpi b { font-size: 17px; font-variant-numeric: tabular-nums; }
+    .inv-kpi small { color: var(--muted); }
+    .inv-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, .8fr); gap: 16px; }
+    .inv-panel h3, .inv-assets h3 { margin: 0; font-size: 14px; }
+    .inv-panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .inv-chart { min-height: 210px; display: grid; align-items: center; }
+    .inv-chart svg { width: 100%; height: 210px; overflow: visible; }
+    .inv-chart-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; margin-top: 6px; }
+    .inv-empty-chart { color: var(--muted); text-align: center; font-size: 13px; padding: 60px 10px; }
+    .inv-donut-wrap { display: grid; grid-template-columns: 150px 1fr; align-items: center; gap: 18px; min-height: 210px; }
+    .inv-donut { width: 150px; aspect-ratio: 1; border-radius: 50%; position: relative; }
+    .inv-donut::after { content: ''; position: absolute; inset: 28px; border-radius: 50%; background: var(--surface); }
+    .inv-legend { display: grid; gap: 9px; }
+    .inv-legend-row { display: grid; grid-template-columns: 9px 1fr auto; align-items: center; gap: 7px; font-size: 11px; }
+    .inv-legend-row i { width: 9px; height: 9px; border-radius: 3px; }
+    .inv-legend-row b { font-variant-numeric: tabular-nums; }
+    .inv-add-asset, .inv-event-form { display: grid; grid-template-columns: 1.1fr .9fr 1fr auto; gap: 8px; margin-top: 14px; }
+    .inv-add-asset input, .inv-add-asset select, .inv-event-form input, .inv-event-form select { min-width: 0; }
+    .inv-assets-list { display: grid; gap: 10px; margin-top: 14px; }
+    .inv-asset { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; grid-template-columns: minmax(0, 1.3fr) repeat(3, minmax(100px, .65fr)) auto; gap: 12px; align-items: center; }
+    .inv-asset-name, .inv-asset-stat { display: grid; gap: 3px; }
+    .inv-asset-name b { font-size: 14px; }
+    .inv-asset-name small, .inv-asset-stat span { color: var(--muted); font-size: 10px; }
+    .inv-asset-stat b { font-size: 13px; font-variant-numeric: tabular-nums; }
+    .inv-actions { display: flex; gap: 7px; flex-wrap: wrap; margin: 14px 0 0; }
+    .inv-actions button { border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 8px 12px; font-weight: 650; color: var(--ink-2); }
+    .inv-actions button.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .inv-history { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; display: grid; }
+    .inv-history-row { display: grid; grid-template-columns: 78px minmax(120px, 1fr) 140px 130px 32px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+    .inv-history-row small { color: var(--muted); }
+    .inv-positive { color: var(--good); } .inv-negative { color: var(--crit); }
 
     @media (max-width: 940px) {
       .app { grid-template-columns: minmax(0, 1fr); }
@@ -635,6 +673,16 @@
       .budget-kpis-clean { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .budget-columns { grid-template-columns: 1fr; }
       .purpose-summary { grid-template-columns: 1fr; }
+      .inv-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .inv-grid { grid-template-columns: 1fr; }
+      .inv-donut-wrap { grid-template-columns: 120px 1fr; }
+      .inv-donut { width: 120px; }
+      .inv-add-asset, .inv-event-form { grid-template-columns: 1fr 1fr; }
+      .inv-add-asset button, .inv-event-form button { grid-column: 1 / -1; }
+      .inv-asset { grid-template-columns: 1fr 1fr; }
+      .inv-asset-name { grid-column: 1 / -1; }
+      .inv-history-row { grid-template-columns: 70px 1fr auto; }
+      .inv-history-row .inv-history-kind { display: none; }
       .benefit-summary { grid-template-columns: 1fr; }
       .benefit-category-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .benefit-grid { grid-template-columns: 1fr; }
@@ -786,6 +834,7 @@
           <button type="button" data-view="months">Meses</button>
           <button type="button" data-view="cards">Cartões</button>
           <button type="button" data-view="benefits">Benefícios</button>
+          <button type="button" data-view="investments">Investimentos</button>
           <button type="button" data-view="debts">Dívidas</button>
         </div>
         <button class="ghost" id="addMonthBtn" type="button">＋ Mês</button>
@@ -808,6 +857,7 @@
     let composerBucket = "necessidades";
     let cardEditId = null;
     let cardExpanded = {};
+    let investmentAction = "contribution";
 
     const baseMonths = [
       { key: "2026-08", label: "Ago/26" },
@@ -832,6 +882,7 @@
         },
         vouchers: []
       },
+      investments: { assets: [], events: [] },
       items: [
         item("crxate", "Crxate", "income", {}),
         item("dropshipping", "Dropshipping", "income", {}),
@@ -877,6 +928,7 @@
       if (target.targetRate == null) target.targetRate = 2.5;
       if (!Array.isArray(target.cards)) target.cards = [];
       if (!target.cardPaid || typeof target.cardPaid !== "object") target.cardPaid = {};
+      ensureInvestments(target);
       ensureBenefits(target);
       const fixedTargetTotal = bucketOrder().filter((bucket) => bucket !== "folga").reduce((total, bucket) => total + Number(target.targets[bucket] || 0), Number(target.targets.fora || 0));
       target.targets.folga = Math.max(0, 100 - fixedTargetTotal);
@@ -884,7 +936,7 @@
         if (entry.kind === "saving" && /retirada/i.test(String(entry.name || ""))) entry.kind = "reserve_withdrawal";
         if (!entry.done || typeof entry.done !== "object") entry.done = {};
         if (!entry.actuals || typeof entry.actuals !== "object") entry.actuals = {};
-        if (entry.kind === "income") { entry.bucket = null; return; }
+        if (["income", "investment_redemption"].includes(entry.kind)) { entry.bucket = null; return; }
         if (!entry.bucket) entry.bucket = defaultBucket(entry.kind);
         if (!entry.paymentSource) entry.paymentSource = "cash";
         if (entry.kind === "expense" && !entry.purpose) entry.purpose = "personal";
@@ -899,6 +951,12 @@
       (target.oldDebts || []).forEach((entry) => {
         if (!entry.plan) entry.plan = { n: 1, start: null };
       });
+    }
+
+    function ensureInvestments(target) {
+      if (!target.investments || typeof target.investments !== "object") target.investments = {};
+      if (!Array.isArray(target.investments.assets)) target.investments.assets = [];
+      if (!Array.isArray(target.investments.events)) target.investments.events = [];
     }
 
     function ensureBenefits(target) {
@@ -1190,10 +1248,12 @@
       let running = Number(state.openingCash || 0);
       return state.months.map((month) => {
         const income = sumItems(month.key, "income");
+        const redemptions = sumItems(month.key, "investment_redemption");
         const expenses = sumItems(month.key, "expense") + sumItems(month.key, "debt") + sumItems(month.key, "investment");
         const cashExpenses = monthProjectedCashExpenses(month.key);
-        const result = income - cashExpenses; running += result;
-        return { month, income, expenses, result, cash: running };
+        const inflows = income + redemptions;
+        const result = inflows - cashExpenses; running += result;
+        return { month, income, redemptions, inflows, expenses, result, cash: running };
       });
     }
     function sumItems(monthKey, kind) { return state.items.filter((e) => e.kind === kind).reduce((t, e) => t + Number(e.amounts[monthKey] || 0), 0); }
@@ -1201,29 +1261,29 @@
     function monthIncome(monthKey) { return sumItems(monthKey, "income"); }
     function monthActualIncome(monthKey) { return state.items.filter((entry) => entry.kind === "income").reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0); }
     function monthActualExpenses(monthKey) {
-      const items = state.items.filter((entry) => !["income", "saving", "reserve_withdrawal"].includes(entry.kind) && !entry.cardId).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
+      const items = state.items.filter((entry) => !["income", "saving", "reserve_withdrawal", "investment_redemption"].includes(entry.kind) && !entry.cardId).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
       const cards = state.cards.reduce((total, card) => total + Number(state.cardPaid[card.id] && state.cardPaid[card.id][monthKey] || 0), 0);
       return items + cards;
     }
     function isBenefitPaid(entry) { return entry.kind === "expense" && benefitKeys().includes(entry.paymentSource); }
     function monthProjectedCashExpenses(monthKey) {
-      return state.items.filter((entry) => !["income", "saving", "reserve_withdrawal"].includes(entry.kind) && !isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.amounts[monthKey] || 0), 0);
+      return state.items.filter((entry) => !["income", "saving", "reserve_withdrawal", "investment_redemption"].includes(entry.kind) && !isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.amounts[monthKey] || 0), 0);
     }
     function monthActualCashExpenses(monthKey) {
-      const items = state.items.filter((entry) => !["income", "saving", "reserve_withdrawal"].includes(entry.kind) && !entry.cardId && !isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
+      const items = state.items.filter((entry) => !["income", "saving", "reserve_withdrawal", "investment_redemption"].includes(entry.kind) && !entry.cardId && !isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
       const cards = state.cards.reduce((total, card) => total + Number(state.cardPaid[card.id] && state.cardPaid[card.id][monthKey] || 0), 0);
       return items + cards;
     }
     function itemBucket(entry) { return entry.bucket || defaultBucket(entry.kind); }
     function monthBucketSpend(monthKey, bucket) {
       if (bucket === "folga") {
-        const committed = state.items.filter((entry) => entry.kind !== "income" && entry.kind !== "reserve_withdrawal" && itemBucket(entry) !== "folga").reduce((total, entry) => total + Number(entry.amounts[monthKey] || 0), 0);
+        const committed = state.items.filter((entry) => !["income", "reserve_withdrawal", "investment_redemption"].includes(entry.kind) && itemBucket(entry) !== "folga").reduce((total, entry) => total + Number(entry.amounts[monthKey] || 0), 0);
         return Math.max(0, monthIncome(monthKey) - committed);
       }
-      return state.items.filter((e) => e.kind !== "income" && e.kind !== "reserve_withdrawal" && itemBucket(e) === bucket).reduce((t, e) => t + Number(e.amounts[monthKey] || 0), 0);
+      return state.items.filter((e) => !["income", "reserve_withdrawal", "investment_redemption"].includes(e.kind) && itemBucket(e) === bucket).reduce((t, e) => t + Number(e.amounts[monthKey] || 0), 0);
     }
     function monthBucketActual(monthKey, bucket) {
-      const items = state.items.filter((entry) => entry.kind !== "income" && entry.kind !== "reserve_withdrawal" && !entry.cardId && itemBucket(entry) === bucket).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
+      const items = state.items.filter((entry) => !["income", "reserve_withdrawal", "investment_redemption"].includes(entry.kind) && !entry.cardId && itemBucket(entry) === bucket).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
       const cards = state.cards.reduce((total, card) => {
         const invoice = cardFatura(card.id, monthKey);
         const paid = Number(state.cardPaid[card.id] && state.cardPaid[card.id][monthKey] || 0);
@@ -1233,8 +1293,8 @@
       }, 0);
       return items + cards;
     }
-    function monthProjectedResult(monthKey) { return monthIncome(monthKey) - monthProjectedCashExpenses(monthKey); }
-    function monthActualResult(monthKey) { return monthActualIncome(monthKey) - monthActualCashExpenses(monthKey); }
+    function monthProjectedResult(monthKey) { return monthIncome(monthKey) + sumItems(monthKey, "investment_redemption") - monthProjectedCashExpenses(monthKey); }
+    function monthActualResult(monthKey) { return monthActualIncome(monthKey) + state.items.filter((entry) => entry.kind === "investment_redemption").reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0) - monthActualCashExpenses(monthKey); }
     function monthActualCash(monthKey) {
       let cash = Number(state.openingCash || 0);
       for (const month of state.months) {
@@ -1252,8 +1312,11 @@
     }
     function monthReserveBalance(monthKey) { return cumulativeKind(monthKey, "saving", "projected") - cumulativeKind(monthKey, "reserve_withdrawal", "projected"); }
     function monthActualReserveBalance(monthKey) { return cumulativeKind(monthKey, "saving", "actual") - cumulativeKind(monthKey, "reserve_withdrawal", "actual"); }
-    function monthInvestmentBalance(monthKey) { return cumulativeKind(monthKey, "investment", "projected"); }
-    function monthActualInvestmentBalance(monthKey) { return cumulativeKind(monthKey, "investment", "actual"); }
+    function monthInvestmentBalance(monthKey) { return portfolioValueAt(`${monthKey}-31`) + cumulativeLegacyInvestment(monthKey, "projected"); }
+    function monthActualInvestmentBalance(monthKey) { return portfolioValueAt(`${monthKey}-31`) + cumulativeLegacyInvestment(monthKey, "actual"); }
+    function cumulativeLegacyInvestment(monthKey, field) {
+      return state.months.filter((month) => month.key <= monthKey).reduce((total, month) => total + state.items.filter((entry) => entry.kind === "investment" && !entry.investmentEventId).reduce((sum, entry) => sum + Number(field === "actual" ? entry.actuals && entry.actuals[month.key] || 0 : entry.amounts[month.key] || 0), 0), 0);
+    }
     function monthProximity(monthKey) { const inc = monthIncome(monthKey); if (inc <= 0) return null; const fora = monthBucketSpend(monthKey, "fora"); return Math.max(0, Math.min(1, (inc - fora) / inc)); }
     function labelForMonth(monthKey) { const f = state.months.find((m) => m.key === monthKey); return f ? f.label : monthKey; }
     function budgetMonthKey() { return state.budgetMonth && state.months.some((m) => m.key === state.budgetMonth) ? state.budgetMonth : state.months[state.months.length - 1].key; }
@@ -1278,6 +1341,7 @@
       ws.innerHTML = state.view === "budget" ? budgetView()
         : state.view === "cards" ? cardsView()
         : state.view === "benefits" ? benefitsView()
+        : state.view === "investments" ? investmentsView()
         : state.view === "debts" ? debtsView()
         : monthsView();
     }
@@ -1463,13 +1527,17 @@
       state.budgetMonth = selected;
       const income = monthIncome(selected);
       const actualIncome = monthActualIncome(selected);
+      const redemptions = sumItems(selected, "investment_redemption");
+      const actualRedemptions = state.items.filter((entry) => entry.kind === "investment_redemption").reduce((total, entry) => total + Number(entry.actuals && entry.actuals[selected] || 0), 0);
+      const cashIn = income + redemptions;
+      const actualCashIn = actualIncome + actualRedemptions;
       const groups = budgetCashGroups(selected);
       const cashOut = groups.reduce((total, group) => total + group.projected, 0);
       const actualCashOut = groups.reduce((total, group) => total + group.actual, 0);
       const benefitProjected = state.items.filter((entry) => isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.amounts[selected] || 0), 0);
       const benefitActual = state.items.filter((entry) => isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[selected] || 0), 0);
-      const result = income - cashOut;
-      const actualResult = actualIncome - actualCashOut;
+      const result = cashIn - cashOut;
+      const actualResult = actualCashIn - actualCashOut;
       const totals = monthTotals();
       const selectedIndex = totals.findIndex((entry) => entry.month.key === selected);
       const finalCash = selectedIndex >= 0 ? totals[selectedIndex].cash : Number(state.openingCash || 0) + result;
@@ -1484,13 +1552,15 @@
           <label class="month-pick">Mês <select onchange="setBudgetMonth(this.value)">${months.map((m) => `<option value="${m.key}" ${m.key === selected ? "selected" : ""}>${m.label}</option>`).join("")}</select></label>
         </div>
         <div class="budget-kpis-clean">
-          ${budgetKpi("Entradas", income, actualIncome)}
+          ${budgetKpi("Entradas na conta", cashIn, actualCashIn)}
           ${budgetKpi("Saídas da conta", cashOut, actualCashOut)}
           ${budgetKpi("Pagos com benefícios", benefitProjected, benefitActual)}
           ${budgetKpi("Resultado do mês", result, actualResult)}
           ${budgetKpi("Saldo ao fim do mês", finalCash, finalActualCash, "result")}
         </div>
+        ${redemptions || actualRedemptions ? `<div class="budget-equation">As entradas incluem ${money(redemptions)} em resgates líquidos de investimentos (${money(actualRedemptions)} realizado).</div>` : ""}
         <div class="budget-equation"><b>${money(previousCash)}</b> de saldo anterior + <b>${money(result)}</b> de resultado em ${labelForMonth(selected)} = <b>${money(finalCash)}</b> ao fim do mês. No realizado: ${money(previousActualCash)} + ${money(actualResult)} = ${money(finalActualCash)}.</div>
+        <div class="budget-equation">Patrimônio em investimentos no fim do mês: <b>${money(monthInvestmentBalance(selected))}</b>. Aportes estão nas saídas da conta; atualizações de valor ficam somente na carteira.</div>
         <div class="purpose-summary">
           ${["personal", "work", "reimbursable"].map((purpose) => `<div class="purpose-kpi"><span>${purposeLabel(purpose)}</span><b>${money(state.items.filter((entry) => entry.kind === "expense" && (entry.purpose || "personal") === purpose).reduce((total, entry) => total + Number(entry.amounts[selected] || 0), 0))}</b></div>`).join("")}
         </div>
@@ -1863,7 +1933,7 @@
             <div class="account-balance"><span>Investimentos</span><b>${money(monthInvestmentBalance(selKey))}</b><small>Fora da conta</small></div>
           </div>
           <div class="mstats">
-            ${mstatCompare("Entradas", sel.income, monthActualIncome(selKey))}
+            ${mstatCompare("Entradas na conta", sel.inflows, monthActualIncome(selKey) + state.items.filter((entry) => entry.kind === "investment_redemption").reduce((total, entry) => total + Number(entry.actuals && entry.actuals[selKey] || 0), 0))}
             ${mstatCompare("Saídas", sel.expenses, monthActualExpenses(selKey))}
             ${mstatCompare("Resultado em conta", sel.result, monthActualResult(selKey))}
           </div>
@@ -1876,6 +1946,7 @@
             ${mList(selKey, "Reserva", "saving")}
             ${mList(selKey, "Retiradas da reserva", "reserve_withdrawal")}
             ${mList(selKey, "Investimentos", "investment")}
+            ${mList(selKey, "Resgates de investimentos", "investment_redemption")}
             ${sel.income === 0 && sel.expenses === 0 ? `<div class="empty">Nada lançado em ${sel.month.label}. Use o "Lançar" na lateral ou o gasto do dia abaixo.</div>` : ""}
           </div>
           ${dayAdder(selKey)}
@@ -2061,9 +2132,48 @@
         ${state.months.map((m) => `<td><input class="cell-input" type="number" step="0.01" value="${entry.amounts[m.key] || ""}" onchange="updateAmount('${entry.id}', '${m.key}', this.value)" /></td>`).join("")}
       </tr>`;
     }
-    function kindLabel(kind) { return ({ income: "entrada", expense: "saída", debt: "dívida", saving: "reserva", reserve_withdrawal: "retirada da reserva", investment: "investimento" })[kind] || kind; }
+    function kindLabel(kind) { return ({ income: "entrada", expense: "saída", debt: "dívida", saving: "reserva", reserve_withdrawal: "retirada da reserva", investment: "investimento", investment_redemption: "resgate líquido" })[kind] || kind; }
 
     /* ---------- debts ---------- */
+    function investmentCategories() { return { renda_fixa: "Renda fixa", renda_variavel: "Renda variável", acoes: "Ações", fundos_imobiliarios: "Fundos imobiliários", criptomoedas: "Criptomoedas", fundos: "Fundos", previdencia: "Previdência", exterior: "Exterior", outros: "Outros" }; }
+    function investmentColors() { return ["#151b17", "#18a957", "#3478d4", "#7555c7", "#e48731", "#d4485f", "#16a3a3", "#8c956f", "#9a6b48"]; }
+    function investmentCategoryLabel(key) { return investmentCategories()[key] || key; }
+    function investmentEvents(assetId, throughDate) { return state.investments.events.filter((e) => (!assetId || e.assetId === assetId) && (!throughDate || e.date <= throughDate)).sort((a, b) => a.date.localeCompare(b.date) || String(a.id).localeCompare(String(b.id))); }
+    function assetMetrics(assetId, throughDate) {
+      let value = 0, contributions = 0, grossWithdrawals = 0, netWithdrawals = 0, tax = 0;
+      investmentEvents(assetId, throughDate).forEach((e) => { if (e.type === "contribution") { value += Number(e.amount || 0); contributions += Number(e.amount || 0); } if (e.type === "valuation") value = Number(e.amount || 0); if (e.type === "withdrawal") { const gross = Number(e.gross || Number(e.net || 0) + Number(e.tax || 0)); value = Math.max(0, value - gross); grossWithdrawals += gross; netWithdrawals += Number(e.net || 0); tax += Number(e.tax || 0); } });
+      const grossGain = value + grossWithdrawals - contributions, gain = value + netWithdrawals - contributions; return { value, contributions, grossWithdrawals, netWithdrawals, tax, grossGain, gain, pct: contributions > 0 ? gain / contributions * 100 : 0 };
+    }
+    function portfolioMetrics(throughDate) { return state.investments.assets.reduce((t, a) => { const m = assetMetrics(a.id, throughDate); Object.keys(t).forEach((key) => t[key] += Number(m[key] || 0)); return t; }, { value: 0, contributions: 0, grossWithdrawals: 0, netWithdrawals: 0, tax: 0, grossGain: 0, gain: 0 }); }
+    function portfolioValueAt(date) { return portfolioMetrics(date).value; }
+    function portfolioSeries() { return [...new Set(state.investments.events.map((e) => e.date).filter(Boolean))].sort().map((date) => ({ date, value: portfolioValueAt(date) })); }
+    function investmentChart() {
+      const s = portfolioSeries(); if (!s.length) return `<div class="inv-empty-chart">O gráfico aparece quando você registrar o primeiro aporte.</div>`;
+      const max = Math.max(1, ...s.map((p) => p.value)); const xy = (p, i) => `${24 + (s.length === 1 ? 296 : i * 592 / (s.length - 1))},${184 - p.value / max * 150}`; const points = s.map(xy).join(" ");
+      return `<div class="inv-chart"><svg viewBox="0 0 640 210" role="img" aria-label="Evolução do patrimônio"><line x1="24" y1="184" x2="616" y2="184" stroke="#dfe3df"/><polygon points="24,184 ${points} 616,184" fill="rgba(24,169,87,.10)"/><polyline points="${points}" fill="none" stroke="#18a957" stroke-width="3"/>${s.map((p, i) => `<circle cx="${xy(p, i).split(",")[0]}" cy="${xy(p, i).split(",")[1]}" r="4" fill="#fff" stroke="#18a957" stroke-width="2"><title>${p.date}: ${money(p.value)}</title></circle>`).join("")}</svg><div class="inv-chart-labels"><span>${s[0].date.split("-").reverse().join("/")}</span><b>${money(s.at(-1).value)}</b><span>${s.at(-1).date.split("-").reverse().join("/")}</span></div></div>`;
+    }
+    function diversificationChart() {
+      const grouped = {}; state.investments.assets.forEach((a) => grouped[a.category] = (grouped[a.category] || 0) + assetMetrics(a.id).value); const entries = Object.entries(grouped).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]); const total = entries.reduce((s, [, v]) => s + v, 0); let cursor = 0; const colors = investmentColors(); const stops = entries.map(([, v], i) => { const start = cursor; cursor += v / total * 100; return `${colors[i % colors.length]} ${start}% ${cursor}%`; });
+      return `<div class="inv-donut-wrap"><div class="inv-donut" style="background:${total ? `conic-gradient(${stops.join(",")})` : "#e8ebe8"}"></div><div class="inv-legend">${entries.length ? entries.map(([cat, v], i) => `<div class="inv-legend-row"><i style="background:${colors[i % colors.length]}"></i><span>${investmentCategoryLabel(cat)}</span><b>${(v / total * 100).toFixed(1)}%</b></div>`).join("") : `<div class="empty">Sem saldo investido.</div>`}</div></div>`;
+    }
+    function investmentsView() {
+      const total = portfolioMetrics(), pct = total.contributions > 0 ? total.gain / total.contributions * 100 : 0, cats = investmentCategories(), assets = state.investments.assets, events = [...state.investments.events].sort((a, b) => b.date.localeCompare(a.date));
+      const fields = investmentAction === "withdrawal" ? `<input class="input inv-net" type="number" step="0.01" min="0" placeholder="Valor líquido na conta"/><input class="input inv-tax" type="number" step="0.01" min="0" placeholder="IR retido"/>` : `<input class="input inv-amount" type="number" step="0.01" min="0" placeholder="${investmentAction === "valuation" ? "Valor atual total" : "Valor do aporte"}"/>`;
+      const assetRows = assets.map((a) => { const m = assetMetrics(a.id); return `<div class="inv-asset"><div class="inv-asset-name"><b>${attr(a.name)}</b><small>${investmentCategoryLabel(a.category)}${a.institution ? ` · ${attr(a.institution)}` : ""}</small></div><div class="inv-asset-stat"><span>Saldo atual</span><b>${money(m.value)}</b></div><div class="inv-asset-stat"><span>Aportado</span><b>${money(m.contributions)}</b></div><div class="inv-asset-stat"><span>Rendimento</span><b class="${m.gain >= 0 ? "inv-positive" : "inv-negative"}">${money(m.gain)} · ${m.pct.toFixed(2)}%</b></div><button class="minibtn danger" onclick="deleteInvestmentAsset('${a.id}')">×</button></div>`; }).join("");
+      const history = events.map((e) => { const a = assets.find((x) => x.id === e.assetId), value = e.type === "withdrawal" ? e.net : e.amount, detail = e.type === "withdrawal" ? `líquido ${money(e.net)} · IR ${money(e.tax)} · bruto ${money(e.gross)}` : e.type === "valuation" ? "novo valor total" : "saiu da conta"; return `<div class="inv-history-row"><small>${e.date.split("-").reverse().join("/")}</small><div><b>${a ? attr(a.name) : "Ativo removido"}</b><br><small>${detail}</small></div><span class="inv-history-kind">${e.type === "contribution" ? "Aporte" : e.type === "valuation" ? "Atualização" : "Resgate"}</span><b>${money(value)}</b><button class="minibtn danger" onclick="deleteInvestmentEvent('${e.id}')">×</button></div>`; }).join("");
+      return `<div class="investments-view"><section class="card inv-head"><div class="inv-headline"><div><h2>Investimentos</h2><p>Carteira manual conectada ao saldo da conta e ao orçamento.</p></div></div><div class="inv-kpis"><div class="inv-kpi"><span>Patrimônio atual</span><b>${money(total.value)}</b><small>fora da conta</small></div><div class="inv-kpi"><span>Total aportado</span><b>${money(total.contributions)}</b><small>histórico</small></div><div class="inv-kpi"><span>Rendimento líquido</span><b class="${total.gain >= 0 ? "inv-positive" : "inv-negative"}">${money(total.gain)}</b><small>${pct.toFixed(2)}%</small></div><div class="inv-kpi"><span>Resgatado líquido</span><b>${money(total.netWithdrawals)}</b><small>voltou à conta</small></div><div class="inv-kpi"><span>IR em resgates</span><b>${money(total.tax)}</b><small>informado manualmente</small></div></div></section><div class="inv-grid"><section class="card inv-panel"><div class="inv-panel-head"><h3>Evolução do patrimônio</h3><small>valor manual</small></div>${investmentChart()}</section><section class="card inv-panel"><div class="inv-panel-head"><h3>Diversificação</h3><small>por categoria</small></div>${diversificationChart()}</section></div><section class="card inv-assets"><h3>Ativos da carteira</h3><div class="inv-add-asset"><input class="input inv-asset-new-name" placeholder="Nome do ativo (ex: CDB Inter)"/><select class="input inv-asset-new-category">${Object.entries(cats).map(([k, l]) => `<option value="${k}">${l}</option>`).join("")}</select><input class="input inv-asset-new-institution" placeholder="Instituição (opcional)"/><button class="btn-primary" onclick="addInvestmentAsset(this)">+ Adicionar ativo</button></div><div class="inv-assets-list">${assetRows || `<div class="empty">Cadastre o primeiro investimento para começar.</div>`}</div></section><section class="card inv-assets"><h3>Registrar movimentação</h3><div class="inv-actions">${[["contribution","Aporte"],["valuation","Atualizar valor"],["withdrawal","Resgate"]].map(([k,l]) => `<button class="${investmentAction === k ? "active" : ""}" onclick="setInvestmentAction('${k}')">${l}</button>`).join("")}</div>${assets.length ? `<div class="inv-event-form"><select class="input inv-event-asset">${assets.map((a) => `<option value="${a.id}">${attr(a.name)}</option>`).join("")}</select><input class="input inv-event-date" type="date" value="${new Date().toISOString().slice(0,10)}"/>${fields}<button class="btn-primary" onclick="addInvestmentEvent(this)">Registrar</button></div>` : `<div class="empty">Adicione um ativo antes de registrar movimentações.</div>`}<div class="inv-history">${history || `<div class="empty">Nenhuma movimentação registrada.</div>`}</div></section></div>`;
+    }
+    function setInvestmentAction(action) { investmentAction = action; render(); }
+    function addInvestmentAsset(button) { const root = button.closest(".inv-add-asset"), name = root.querySelector(".inv-asset-new-name").value.trim(); if (!name) return root.querySelector(".inv-asset-new-name").focus(); state.investments.assets.push({ id: `asset-${Date.now()}`, name, category: root.querySelector(".inv-asset-new-category").value, institution: root.querySelector(".inv-asset-new-institution").value.trim(), createdAt: new Date().toISOString() }); render(); }
+    function ensureMonthForDate(date) { const key = date.slice(0, 7); if (!state.months.some((m) => m.key === key)) { const [y, n] = key.split("-").map(Number), raw = new Intl.DateTimeFormat("pt-BR", {month:"short",year:"2-digit"}).format(new Date(y,n-1,1)).replace(" de ","/").replace(".",""); state.months.push({ key, label: raw.charAt(0).toUpperCase()+raw.slice(1) }); state.months.sort((a,b)=>a.key.localeCompare(b.key)); } return key; }
+    function addInvestmentEvent(button) {
+      const root = button.closest(".inv-event-form"), assetId = root.querySelector(".inv-event-asset").value, date = root.querySelector(".inv-event-date").value; if (!assetId || !date) return; const e = { id:`invevent-${Date.now()}`, assetId, type:investmentAction, date };
+      if (investmentAction === "withdrawal") { e.net = numberValue(root.querySelector(".inv-net").value); e.tax = numberValue(root.querySelector(".inv-tax").value); e.gross = e.net + e.tax; if (e.net <= 0) return root.querySelector(".inv-net").focus(); } else { e.amount = numberValue(root.querySelector(".inv-amount").value); if (e.amount < 0 || (investmentAction === "contribution" && e.amount <= 0)) return root.querySelector(".inv-amount").focus(); }
+      state.investments.events.push(e); const month = ensureMonthForDate(date), asset = state.investments.assets.find((a) => a.id === assetId); if (e.type === "contribution") { const flow = item(`invflow-${e.id}`, `Aporte · ${asset.name}`, "investment", {[month]:e.amount}, "reserva"); flow.actuals[month]=e.amount; flow.done[month]=true; flow.investmentEventId=e.id; state.items.push(flow); } if (e.type === "withdrawal") { const flow=item(`invflow-${e.id}`, `Resgate líquido · ${asset.name}`, "investment_redemption", {[month]:e.net}); flow.actuals[month]=e.net; flow.done[month]=true; flow.investmentEventId=e.id; state.items.push(flow); } render();
+    }
+    function deleteInvestmentEvent(id) { if (!confirm("Excluir esta movimentação?")) return; state.investments.events=state.investments.events.filter((e)=>e.id!==id); state.items=state.items.filter((e)=>e.investmentEventId!==id); render(); }
+    function deleteInvestmentAsset(id) { if (!confirm("Excluir o ativo e todas as movimentações dele?")) return; const ids=state.investments.events.filter((e)=>e.assetId===id).map((e)=>e.id); state.investments.assets=state.investments.assets.filter((a)=>a.id!==id); state.investments.events=state.investments.events.filter((e)=>e.assetId!==id); state.items=state.items.filter((e)=>!ids.includes(e.investmentEventId)); render(); }
+
     function debtsView() {
       const debts = [...state.oldDebts].sort((a, b) => Number(b.payable || 0) - Number(a.payable || 0));
       const full = state.oldDebts.reduce((t, e) => t + Number(e.full || 0), 0);
