@@ -386,10 +386,11 @@
     .benefit-card header strong { display: flex; align-items: center; gap: 8px; font-size: 15px; }
     .benefit-card header strong::before { content: ""; width: 9px; height: 9px; border-radius: 3px; background: var(--bc); }
     .benefit-balance { color: var(--bc); font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
-    .benefit-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .benefit-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
     .benefit-fields label { display: grid; gap: 5px; min-width: 0; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
     .benefit-fields input { width: 100%; min-width: 0; min-height: 38px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); padding: 0 9px; font-variant-numeric: tabular-nums; }
     .benefit-fields input:focus { outline: none; border-color: var(--bc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--bc) 18%, #fff); }
+    .benefit-readonly { min-height: 38px; display: flex; align-items: center; justify-content: flex-end; border: 0; border-radius: 9px; background: color-mix(in srgb, var(--bc) 8%, var(--surface)); padding: 0 10px; color: var(--bc); font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
     .voucher-panel { border-top: 1px solid var(--line); padding-top: 18px; display: grid; gap: 12px; }
     .voucher-add { display: grid; grid-template-columns: 1fr 150px 150px auto; gap: 9px; }
     .voucher-add button { min-height: 42px; padding: 0 16px; }
@@ -568,7 +569,7 @@
       .benefits-view { padding: 16px; }
       .benefit-summary { grid-template-columns: 1fr; }
       .benefit-grid { grid-template-columns: 1fr; }
-      .benefit-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .benefit-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .voucher-add { grid-template-columns: 1fr 1fr; }
       .voucher-add .voucher-name { grid-column: 1 / -1; }
       .voucher-add button { grid-column: 1 / -1; }
@@ -1237,12 +1238,16 @@
     function benefitCard(key, monthKey) {
       const meta = benefitMeta(key);
       const account = state.benefits.accounts[key];
+      const flowSpent = benefitMovementSpent(key, monthKey);
+      const manualSpent = Number(account.spent[monthKey] || 0);
+      const totalSpent = flowSpent + manualSpent;
       return `<section class="benefit-card" style="--bc:${meta.color}">
         <header><strong>${meta.label}</strong><span class="benefit-balance">${money(benefitBalance(key, monthKey))}</span></header>
         <div class="benefit-fields">
           <label>Crédito no mês<input type="number" min="0" step="0.01" inputmode="decimal" value="${account.credits[monthKey] || ""}" onchange="updateBenefit('${key}','credits','${monthKey}',this.value)" /></label>
-          <label>Uso avulso<input type="number" min="0" step="0.01" inputmode="decimal" value="${account.spent[monthKey] || ""}" onchange="updateBenefit('${key}','spent','${monthKey}',this.value)" title="Uso que não foi lançado na movimentação" /></label>
-          <label>Convertido<input type="number" min="0" step="0.01" inputmode="decimal" value="${account.converted[monthKey] || ""}" readonly title="Calculado pelos vales registrados" /></label>
+          <label>Gasto fora do fluxo<input type="number" min="0" step="0.01" inputmode="decimal" value="${account.spent[monthKey] || ""}" onchange="updateBenefit('${key}','spent','${monthKey}',this.value)" title="Compras no Flash que não foram lançadas na movimentação" /></label>
+          <label>Gastos no cartão<span class="benefit-readonly" title="${money(flowSpent)} lançados no fluxo + ${money(manualSpent)} fora do fluxo">${money(totalSpent)}</span></label>
+          <label>Convertido<span class="benefit-readonly" title="Calculado pelos vales-presente registrados">${money(account.converted[monthKey] || 0)}</span></label>
         </div>
       </section>`;
     }
