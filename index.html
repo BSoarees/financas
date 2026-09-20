@@ -2085,7 +2085,14 @@
     window.addEventListener("online", () => { if (ghToken()) cloudPull({}); });
 
     if (location.protocol.startsWith("http") && "serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js").catch(() => {});
+      navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" })
+        .then((registration) => registration.update())
+        .catch(() => {});
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (sessionStorage.getItem("financas.sw.reloaded")) return;
+        sessionStorage.setItem("financas.sw.reloaded", "1");
+        location.reload();
+      });
     }
   </script>
 </body>

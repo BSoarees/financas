@@ -1,5 +1,5 @@
 /* cache so do casco do app. dado nunca passa por aqui. */
-const CACHE = "financas-v1";
+const CACHE = "financas-v2";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (event) => {
@@ -22,7 +22,7 @@ self.addEventListener("fetch", (event) => {
 
   // rede primeiro pra nunca abrir uma versao velha do app; cache e so o fallback offline
   event.respondWith(
-    fetch(request)
+    fetch(request, { cache: "no-store" })
       .then((response) => {
         const copy = response.clone();
         caches.open(CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
