@@ -189,6 +189,13 @@
     .budget-kpi-clean small { display: block; margin-top: 3px; color: var(--muted); font-size: 10.5px; }
     .budget-kpi-clean.result { background: var(--ink); color: #fff; border-color: var(--ink); }
     .budget-kpi-clean.result span, .budget-kpi-clean.result small { color: rgba(255,255,255,.62); }
+    .budget-category-accumulated { display: grid; gap: 9px; }
+    .budget-category-accumulated > span { color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+    .budget-category-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+    .budget-category-chip { min-width: 0; border: 1px solid var(--line); border-radius: 11px; padding: 10px; background: var(--surface); display: grid; gap: 5px; }
+    .budget-category-chip span { display: flex; align-items: center; gap: 6px; min-width: 0; color: var(--muted); font-size: 9px; font-weight: 700; text-transform: uppercase; }
+    .budget-category-chip i { width: 7px; height: 7px; border-radius: 3px; flex: 0 0 auto; }
+    .budget-category-chip b { font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .budget-equation { padding: 10px 12px; border-radius: 10px; background: var(--surface-2); color: var(--ink-2); font-size: 12px; line-height: 1.45; }
     .budget-equation b { color: var(--ink); }
     .purpose-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -686,6 +693,9 @@
       .benefits-view { padding: 16px; }
       .budget-clean { padding: 16px; }
       .budget-kpis-clean { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .budget-category-grid { display: flex; overflow-x: auto; scrollbar-width: none; }
+      .budget-category-grid::-webkit-scrollbar { display: none; }
+      .budget-category-chip { flex: 0 0 130px; }
       .budget-columns { grid-template-columns: 1fr; }
       .purpose-summary { grid-template-columns: 1fr; }
       .inv-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1590,6 +1600,7 @@
           ${budgetKpi("Total em investimentos", monthInvestmentBalance(selected))}
           ${budgetKpi("Saldo na conta", finalCash, "result")}
         </div>
+        <div class="budget-category-accumulated"><span>Acumulado por categoria até ${labelForMonth(selected)}</span><div class="budget-category-grid">${["necessidades", "lazer", "educacao", "liberdade", "reserva", "investimentos", "fora"].map((bucket) => `<div class="budget-category-chip"><span><i style="background:${poteColor(bucket)}"></i>${bucketLabel(bucket)}</span><b>${money(cumulativeBucketBalance(selected, bucket))}</b></div>`).join("")}</div></div>
         <div class="purpose-summary">
           ${["personal", "work", "reimbursable"].map((purpose) => `<div class="purpose-kpi"><span>${purposeLabel(purpose)}</span><b>${money(state.items.filter((entry) => entry.kind === "expense" && (entry.purpose || "personal") === purpose).reduce((total, entry) => total + Number(entry.amounts[selected] || 0), 0))}</b></div>`).join("")}
         </div>
@@ -1618,6 +1629,12 @@
 
     function budgetKpi(label, value, cls) {
       return `<div class="budget-kpi-clean ${cls || ""}"><span>${label}</span><b class="${value < 0 ? "neg" : ""}">${money(value)}</b></div>`;
+    }
+
+    function cumulativeBucketBalance(monthKey, bucket) {
+      if (bucket === "reserva") return monthReserveBalance(monthKey);
+      if (bucket === "investimentos") return monthInvestmentBalance(monthKey);
+      return state.months.filter((month) => month.key <= monthKey).reduce((total, month) => total + monthBucketSpend(month.key, bucket), 0);
     }
 
     function budgetCashGroups(monthKey) {
