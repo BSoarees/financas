@@ -1207,7 +1207,11 @@
       return cash;
     }
     function cumulativeKind(monthKey, kind, field) {
-      return state.months.filter((month) => month.key <= monthKey).reduce((total, month) => total + state.items.filter((entry) => entry.kind === kind).reduce((sum, entry) => sum + Number(field === "actual" ? entry.actuals && entry.actuals[month.key] || 0 : entry.amounts[month.key] || 0), 0), 0);
+      return state.months.filter((month) => month.key <= monthKey).reduce((total, month) => total + state.items.filter((entry) => entry.kind === kind).reduce((sum, entry) => {
+        const projected = Number(entry.amounts[month.key] || 0);
+        if (field === "actual") return sum + (projected !== 0 ? Number(entry.actuals && entry.actuals[month.key] || 0) : 0);
+        return sum + projected;
+      }, 0), 0);
     }
     function monthReserveBalance(monthKey) { return cumulativeKind(monthKey, "saving", "projected"); }
     function monthActualReserveBalance(monthKey) { return cumulativeKind(monthKey, "saving", "actual"); }
@@ -2004,7 +2008,11 @@
       const entry = state.items.find((c) => c.id === itemId);
       if (!entry) return;
       const value = numberValue(rawValue);
-      if (value === 0) delete entry.amounts[monthKey]; else entry.amounts[monthKey] = value;
+      if (value === 0) {
+        delete entry.amounts[monthKey];
+        if (entry.actuals) delete entry.actuals[monthKey];
+        if (entry.done) delete entry.done[monthKey];
+      } else entry.amounts[monthKey] = value;
       render();
     }
     function updateActual(itemId, monthKey, rawValue) {
