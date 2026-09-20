@@ -376,6 +376,7 @@
     .pill.expense { color: var(--ink-2); background: var(--surface-2); border: 1px solid var(--line); }
     .pill.debt { color: var(--crit); background: var(--crit-soft); }
     .pill.saving { color: var(--accent); background: var(--accent-soft); }
+    .pill.investment { color: #6a4fb0; background: #eee9fa; }
     .bucket-select { min-height: 28px; padding: 2px 8px; font-size: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); color: var(--ink-2); }
     .cell-input { width: 100px; text-align: right; border: 1px solid transparent; background: transparent; min-height: 30px; padding: 4px 8px; border-radius: 8px; font-variant-numeric: tabular-nums; }
     .cell-input:hover { border-color: var(--line); background: var(--surface-2); }
@@ -672,6 +673,7 @@
             <button type="button" data-kind="income">Entrada</button>
             <button type="button" data-kind="debt">Dívida</button>
             <button type="button" data-kind="saving">Reserva</button>
+            <button type="button" data-kind="investment">Investimento</button>
           </div>
         </div>
         <div class="row2">
@@ -834,7 +836,7 @@
       return out;
     }
 
-    function defaultBucket(kind) { return kind === "debt" ? "fora" : kind === "saving" ? "reserva" : "necessidades"; }
+    function defaultBucket(kind) { return kind === "debt" ? "fora" : (kind === "saving" || kind === "investment") ? "reserva" : "necessidades"; }
     function bucketOrder() { return ["necessidades", "lazer", "educacao", "liberdade", "reserva", "folga"]; }
     function bucketLabel(bucket) {
       return ({ necessidades: "Necessidades", lazer: "Lazer", educacao: "Educacao", liberdade: "Liberdade financeira", reserva: "Reserva", folga: "Folga / livre", fora: "Dividas & travados" })[bucket] || bucket;
@@ -1151,7 +1153,7 @@
       let running = Number(state.openingCash || 0);
       return state.months.map((month) => {
         const income = sumItems(month.key, "income");
-        const expenses = sumItems(month.key, "expense") + sumItems(month.key, "debt") + sumItems(month.key, "saving");
+        const expenses = sumItems(month.key, "expense") + sumItems(month.key, "debt") + sumItems(month.key, "investment");
         const cashExpenses = monthProjectedCashExpenses(month.key);
         const result = income - cashExpenses; running += result;
         return { month, income, expenses, result, cash: running };
@@ -1162,16 +1164,16 @@
     function monthIncome(monthKey) { return sumItems(monthKey, "income"); }
     function monthActualIncome(monthKey) { return state.items.filter((entry) => entry.kind === "income").reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0); }
     function monthActualExpenses(monthKey) {
-      const items = state.items.filter((entry) => entry.kind !== "income" && !entry.cardId).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
+      const items = state.items.filter((entry) => entry.kind !== "income" && entry.kind !== "saving" && !entry.cardId).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
       const cards = state.cards.reduce((total, card) => total + Number(state.cardPaid[card.id] && state.cardPaid[card.id][monthKey] || 0), 0);
       return items + cards;
     }
     function isBenefitPaid(entry) { return entry.kind === "expense" && benefitKeys().includes(entry.paymentSource); }
     function monthProjectedCashExpenses(monthKey) {
-      return state.items.filter((entry) => entry.kind !== "income" && !isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.amounts[monthKey] || 0), 0);
+      return state.items.filter((entry) => entry.kind !== "income" && entry.kind !== "saving" && !isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.amounts[monthKey] || 0), 0);
     }
     function monthActualCashExpenses(monthKey) {
-      const items = state.items.filter((entry) => entry.kind !== "income" && !entry.cardId && !isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
+      const items = state.items.filter((entry) => entry.kind !== "income" && entry.kind !== "saving" && !entry.cardId && !isBenefitPaid(entry)).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
       const cards = state.cards.reduce((total, card) => total + Number(state.cardPaid[card.id] && state.cardPaid[card.id][monthKey] || 0), 0);
       return items + cards;
     }
@@ -1204,6 +1206,13 @@
       }
       return cash;
     }
+    function cumulativeKind(monthKey, kind, field) {
+      return state.months.filter((month) => month.key <= monthKey).reduce((total, month) => total + state.items.filter((entry) => entry.kind === kind).reduce((sum, entry) => sum + Number(field === "actual" ? entry.actuals && entry.actuals[month.key] || 0 : entry.amounts[month.key] || 0), 0), 0);
+    }
+    function monthReserveBalance(monthKey) { return cumulativeKind(monthKey, "saving", "projected"); }
+    function monthActualReserveBalance(monthKey) { return cumulativeKind(monthKey, "saving", "actual"); }
+    function monthInvestmentBalance(monthKey) { return cumulativeKind(monthKey, "investment", "projected"); }
+    function monthActualInvestmentBalance(monthKey) { return cumulativeKind(monthKey, "investment", "actual"); }
     function monthProximity(monthKey) { const inc = monthIncome(monthKey); if (inc <= 0) return null; const fora = monthBucketSpend(monthKey, "fora"); return Math.max(0, Math.min(1, (inc - fora) / inc)); }
     function labelForMonth(monthKey) { const f = state.months.find((m) => m.key === monthKey); return f ? f.label : monthKey; }
     function budgetMonthKey() { return state.budgetMonth && state.months.some((m) => m.key === state.budgetMonth) ? state.budgetMonth : state.months[state.months.length - 1].key; }
@@ -1420,7 +1429,7 @@
     function budgetCashGroups(monthKey) {
       const direct = state.items.filter((entry) => entry.kind === "expense" && itemBucket(entry) !== "fora" && !entry.cardId && !isBenefitPaid(entry) && Number(entry.amounts[monthKey] || 0) !== 0);
       const debts = state.items.filter((entry) => (entry.kind === "debt" || (entry.kind === "expense" && itemBucket(entry) === "fora")) && !entry.cardId && !isBenefitPaid(entry) && Number(entry.amounts[monthKey] || 0) !== 0);
-      const savings = state.items.filter((entry) => entry.kind === "saving" && !entry.cardId && Number(entry.amounts[monthKey] || 0) !== 0);
+      const investments = state.items.filter((entry) => entry.kind === "investment" && !entry.cardId && Number(entry.amounts[monthKey] || 0) !== 0);
       const cards = state.cards.map((card) => ({
         name: `Fatura ${card.name}`,
         projected: cardFatura(card.id, monthKey),
@@ -1430,7 +1439,7 @@
         label,
         lines: entries.map((entry) => ({ name: entry.name, projected: Number(entry.amounts[monthKey] || 0), actual: Number(entry.actuals && entry.actuals[monthKey] || 0) }))
       });
-      const groups = [itemGroup("Despesas diretas", direct), { label: "Faturas de cartão", lines: cards }, itemGroup("Pagamentos de dívidas", debts), itemGroup("Reserva e investimentos", savings)];
+      const groups = [itemGroup("Despesas diretas", direct), { label: "Faturas de cartão", lines: cards }, itemGroup("Pagamentos de dívidas", debts), itemGroup("Investimentos transferidos", investments)];
       return groups.map((group) => ({ ...group, projected: group.lines.reduce((total, line) => total + line.projected, 0), actual: group.lines.reduce((total, line) => total + line.actual, 0) }));
     }
 
@@ -1734,14 +1743,17 @@
         </div>
         <div class="card mpanel">
           <div class="mpanel-head">
-            <div><div class="mp-title">${sel.month.label}</div><div class="mp-sub">caixa projetado ${money(sel.cash)} · realizado ${money(monthActualCash(selKey))}${dc.total ? ` · <b class="donecount ${dc.done === dc.total ? "all" : ""}">${dc.done}/${dc.total} feitos${dc.partial ? ` · ${dc.partial} parciais` : ""}</b>` : ""}</div></div>
+            <div><div class="mp-title">${sel.month.label}</div><div class="mp-sub">saldo em conta ${money(sel.cash)} · reserva incluída ${money(monthReserveBalance(selKey))}${dc.total ? ` · <b class="donecount ${dc.done === dc.total ? "all" : ""}">${dc.done}/${dc.total} feitos${dc.partial ? ` · ${dc.partial} parciais` : ""}</b>` : ""}</div></div>
             <div class="mp-result ${sel.result < 0 ? "neg" : "pos"}">${sel.result >= 0 ? "+" : ""}${money(sel.result)}</div>
           </div>
           <div class="mstats">
             ${mstatCompare("Entradas", sel.income, monthActualIncome(selKey))}
             ${mstatCompare("Saídas", sel.expenses, monthActualExpenses(selKey))}
             ${mstatCompare("Resultado em conta", sel.result, monthActualResult(selKey))}
-            ${mstatCompare("Caixa acumulado", sel.cash, monthActualCash(selKey))}
+            ${mstatCompare("Saldo em conta", sel.cash, monthActualCash(selKey))}
+            ${mstatCompare("Saldo investimentos", monthInvestmentBalance(selKey), monthActualInvestmentBalance(selKey))}
+            ${mstatCompare("Saldo reserva", monthReserveBalance(selKey), monthActualReserveBalance(selKey))}
+            ${mstatCompare("Disponível livre", sel.cash - monthReserveBalance(selKey), monthActualCash(selKey) - monthActualReserveBalance(selKey))}
           </div>
           ${allocBar(selKey)}
           <div class="mlists">
@@ -1750,6 +1762,7 @@
             ${mCardsList(selKey)}
             ${mList(selKey, "Dívidas", "debt")}
             ${mList(selKey, "Reserva", "saving")}
+            ${mList(selKey, "Investimentos", "investment")}
             ${sel.income === 0 && sel.expenses === 0 ? `<div class="empty">Nada lançado em ${sel.month.label}. Use o "Lançar" na lateral ou o gasto do dia abaixo.</div>` : ""}
           </div>
           ${dayAdder(selKey)}
@@ -1809,7 +1822,7 @@
     }
 
     function mRow(entry, monthKey) {
-      const canBucket = entry.kind === "expense" || entry.kind === "saving";
+      const canBucket = entry.kind === "expense" || entry.kind === "saving" || entry.kind === "investment";
       const b = itemBucket(entry);
       const projected = Number(entry.amounts[monthKey] || 0);
       const actual = Number(entry.actuals && entry.actuals[monthKey] || 0);
@@ -1901,7 +1914,8 @@
         sectionRow("Entradas"), ...itemRows("income"),
         sectionRow("Saídas"), ...itemRows("expense"),
         sectionRow("Dívidas no fluxo"), ...itemRows("debt"),
-        sectionRow("Reserva"), ...itemRows("saving")
+        sectionRow("Reserva"), ...itemRows("saving"),
+        sectionRow("Investimentos"), ...itemRows("investment")
       ].join("");
     }
     function sectionRow(label) { return `<tr class="section-row"><td>${label}</td>${state.months.map(() => "<td></td>").join("")}</tr>`; }
@@ -1925,7 +1939,7 @@
         ${state.months.map((m) => `<td><input class="cell-input" type="number" step="0.01" value="${entry.amounts[m.key] || ""}" onchange="updateAmount('${entry.id}', '${m.key}', this.value)" /></td>`).join("")}
       </tr>`;
     }
-    function kindLabel(kind) { return ({ income: "entrada", expense: "saída", debt: "dívida", saving: "reserva" })[kind] || kind; }
+    function kindLabel(kind) { return ({ income: "entrada", expense: "saída", debt: "dívida", saving: "reserva", investment: "investimento" })[kind] || kind; }
 
     /* ---------- debts ---------- */
     function debtsView() {
@@ -2100,6 +2114,7 @@
       composerKind = kind;
       if (kind === "income") composerBucket = null;
       else if (kind === "debt") composerBucket = "fora";
+      else if (kind === "saving" || kind === "investment") composerBucket = "reserva";
       else if (!composerBucket || composerBucket === "fora") composerBucket = "necessidades";
       syncComposerUi();
     }
