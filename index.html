@@ -301,6 +301,8 @@
     .money-mini::after { content: attr(data-label); position: absolute; top: -9px; right: 8px; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
     .money-mini::before { content: "R$"; position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--muted); pointer-events: none; }
     .mrow-val { width: 132px; min-height: 34px; text-align: right; border: 1px solid transparent; border-radius: 9px; background: transparent; padding: 4px 10px 4px 32px; font-variant-numeric: tabular-nums; font-weight: 600; transition: border-color 0.14s, background 0.14s, box-shadow 0.14s; }
+    .mrow-val::-webkit-outer-spin-button, .mrow-val::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .mrow-val { -moz-appearance: textfield; appearance: textfield; }
     .mrow-val:hover { border-color: var(--line); background: var(--surface-2); }
     .mrow-val:focus { outline: none; border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px var(--accent-soft); }
     span.mrow-val.ro { display: inline-block; padding: 4px 2px 4px 10px; color: var(--ink-2); }
@@ -363,6 +365,37 @@
     .badge.cara { color: var(--crit); background: var(--crit-soft); }
 
     .empty { color: var(--muted); padding: 20px; text-align: center; font-size: 13px; }
+
+    /* ---------- Flash benefits ---------- */
+    .benefits-view { padding: 20px 22px; display: grid; gap: 18px; }
+    .benefits-head { display: flex; justify-content: space-between; gap: 16px; align-items: end; flex-wrap: wrap; }
+    .benefits-title h2 { margin: 0; font-size: 20px; letter-spacing: -0.02em; }
+    .benefits-title p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .benefit-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .benefit-kpi { padding: 14px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface-2); }
+    .benefit-kpi span { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+    .benefit-kpi b { display: block; margin-top: 5px; font-size: 20px; font-variant-numeric: tabular-nums; }
+    .benefit-kpi.total { background: #171b18; color: #fff; border-color: #171b18; }
+    .benefit-kpi.total span { color: rgba(255,255,255,.62); }
+    .benefit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .benefit-card { --bc: var(--accent); padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-2); display: grid; gap: 13px; }
+    .benefit-card header { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+    .benefit-card header strong { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+    .benefit-card header strong::before { content: ""; width: 9px; height: 9px; border-radius: 3px; background: var(--bc); }
+    .benefit-balance { color: var(--bc); font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .benefit-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .benefit-fields label { display: grid; gap: 5px; min-width: 0; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+    .benefit-fields input { width: 100%; min-width: 0; min-height: 38px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); padding: 0 9px; font-variant-numeric: tabular-nums; }
+    .benefit-fields input:focus { outline: none; border-color: var(--bc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--bc) 18%, #fff); }
+    .voucher-panel { border-top: 1px solid var(--line); padding-top: 18px; display: grid; gap: 12px; }
+    .voucher-add { display: grid; grid-template-columns: 1fr 150px 150px auto; gap: 9px; }
+    .voucher-add button { min-height: 42px; padding: 0 16px; }
+    .voucher-list { display: grid; gap: 8px; }
+    .voucher-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 126px 32px; gap: 10px; align-items: center; padding: 11px 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface-2); }
+    .voucher-row strong { display: block; font-size: 13px; }
+    .voucher-row small { color: var(--muted); }
+    .voucher-row .remaining { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .voucher-row input { width: 126px; min-height: 34px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 0 8px; }
 
     /* ---------- cards view ---------- */
     .cards-view { padding: 20px 22px; display: grid; gap: 16px; }
@@ -495,7 +528,7 @@
       .ring-label b { font-size: 34px; }
       .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
       .kpi { min-width: 0; }
-      .kpi b { font-size: 17px; }
+      .kpi b { font-size: clamp(14px, 4.2vw, 17px); }
 
       .toolbar { flex-wrap: nowrap; gap: 8px; }
       .tabs { overflow-x: auto; flex: 1; scrollbar-width: none; }
@@ -508,10 +541,10 @@
       .mchip { flex: 0 0 auto; min-width: 96px; }
       .mpanel { padding: 16px; }
       .mstats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-      .mstat { min-width: 0; } .mstat b { font-size: 16px; }
+      .mstat { min-width: 0; } .mstat b { font-size: clamp(14px, 4vw, 16px); }
       .mp-title { font-size: 18px; } .mp-result { font-size: 18px; }
 
-      .mrow { grid-template-columns: 24px minmax(0, 1fr) auto auto; grid-template-areas: "check name name actions" "check lead projected actual"; gap: 10px 8px; padding: 10px 0; }
+      .mrow { grid-template-columns: 24px minmax(64px, 1fr) minmax(72px, 92px) minmax(72px, 92px); grid-template-areas: "check name name actions" "check lead projected actual"; gap: 10px 6px; padding: 10px 0; }
       .mrow > .rowcheck { grid-area: check; align-self: center; }
       .mrow > .pill-wrap { grid-area: lead; align-self: center; min-width: 0; max-width: 100%; }
       .mrow > .kind-dot { display: none; }
@@ -523,9 +556,20 @@
       .pill-wrap::after { right: 7px; }
       .money-mini::before { display: none; }
       .money-mini::after { top: -8px; right: 6px; }
-      .mrow-val { width: 84px; font-size: 16px; padding: 4px 8px; }
+      .money-mini { justify-self: stretch; }
+      .mrow-val { width: 100%; min-width: 0; font-size: 16px; padding: 4px 6px; }
+      @media (max-width: 340px) { .mrow-val { padding: 4px 3px; } .mrow { gap: 10px 5px; } }
       .mrow.cardrow { grid-template-columns: 24px 1fr; grid-template-areas: "check name" "check pay"; }
       .mrow.cardrow .rowcheck { grid-area: check; align-self: center; } .mrow.cardrow .kind-dot { display: none; } .mrow.cardrow .mrow-name { grid-area: name; } .mrow.cardrow .cardpay { grid-area: pay; justify-self: start; }
+      .benefits-view { padding: 16px; }
+      .benefit-summary { grid-template-columns: 1fr; }
+      .benefit-grid { grid-template-columns: 1fr; }
+      .benefit-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .voucher-add { grid-template-columns: 1fr 1fr; }
+      .voucher-add .voucher-name { grid-column: 1 / -1; }
+      .voucher-add button { grid-column: 1 / -1; }
+      .voucher-row { grid-template-columns: minmax(0, 1fr) auto 32px; }
+      .voucher-row input { grid-column: 1 / -1; width: 100%; }
 
       .budget, .cards-view, .debts-view, .mlists { gap: 14px; }
       .budget, .cards-view, .debts-view { padding: 16px; }
@@ -646,6 +690,7 @@
           <button type="button" data-view="budget">Orçamento</button>
           <button type="button" data-view="months">Meses</button>
           <button type="button" data-view="cards">Cartões</button>
+          <button type="button" data-view="benefits">Benefícios</button>
           <button type="button" data-view="debts">Dívidas</button>
         </div>
         <button class="ghost" id="addMonthBtn" type="button">＋ Mês</button>
@@ -683,6 +728,15 @@
       targets: { necessidades: 55, lazer: 10, educacao: 10, liberdade: 10, reserva: 5, folga: 10 },
       targetRate: 2.5,
       cards: [],
+      benefits: {
+        accounts: {
+          alimentacao: { credits: {}, spent: {}, converted: {} },
+          refeicao: { credits: {}, spent: {}, converted: {} },
+          mobilidade: { credits: {}, spent: {}, converted: {} },
+          homeoffice: { credits: {}, spent: {}, converted: {} }
+        },
+        vouchers: []
+      },
       items: [
         item("crxate", "Crxate", "income", {}),
         item("dropshipping", "Dropshipping", "income", {}),
@@ -728,6 +782,7 @@
       if (target.targetRate == null) target.targetRate = 2.5;
       if (!Array.isArray(target.cards)) target.cards = [];
       if (!target.cardPaid || typeof target.cardPaid !== "object") target.cardPaid = {};
+      ensureBenefits(target);
       const fixedTargetTotal = bucketOrder().filter((bucket) => bucket !== "folga").reduce((total, bucket) => total + Number(target.targets[bucket] || 0), Number(target.targets.fora || 0));
       target.targets.folga = Math.max(0, 100 - fixedTargetTotal);
       (target.items || []).forEach((entry) => {
@@ -746,6 +801,20 @@
       (target.oldDebts || []).forEach((entry) => {
         if (!entry.plan) entry.plan = { n: 1, start: null };
       });
+    }
+
+    function ensureBenefits(target) {
+      const keys = ["alimentacao", "refeicao", "mobilidade", "homeoffice"];
+      if (!target.benefits || typeof target.benefits !== "object") target.benefits = {};
+      if (!target.benefits.accounts || typeof target.benefits.accounts !== "object") target.benefits.accounts = {};
+      keys.forEach((key) => {
+        const account = target.benefits.accounts[key] || {};
+        account.credits = account.credits && typeof account.credits === "object" ? account.credits : {};
+        account.spent = account.spent && typeof account.spent === "object" ? account.spent : {};
+        account.converted = account.converted && typeof account.converted === "object" ? account.converted : {};
+        target.benefits.accounts[key] = account;
+      });
+      if (!Array.isArray(target.benefits.vouchers)) target.benefits.vouchers = [];
     }
 
     function loadState() {
@@ -1080,8 +1149,122 @@
       const ws = document.getElementById("workspace");
       ws.innerHTML = state.view === "budget" ? budgetView()
         : state.view === "cards" ? cardsView()
+        : state.view === "benefits" ? benefitsView()
         : state.view === "debts" ? debtsView()
         : monthsView();
+    }
+
+    /* ---------- Flash benefits ---------- */
+    function benefitKeys() { return ["alimentacao", "refeicao", "mobilidade", "homeoffice"]; }
+    function benefitMeta(key) {
+      return ({
+        alimentacao: { label: "Alimentação", color: "#ee7c28" },
+        refeicao: { label: "Refeição", color: "#d94b64" },
+        mobilidade: { label: "Mobilidade", color: "#4f74d9" },
+        homeoffice: { label: "Auxílio home office", color: "#7a55bf" }
+      })[key];
+    }
+    function benefitMonthKey() {
+      return state.benefitMonth && state.months.some((m) => m.key === state.benefitMonth) ? state.benefitMonth : state.months[state.months.length - 1].key;
+    }
+    function benefitBalance(key, throughMonth) {
+      const account = state.benefits.accounts[key];
+      return state.months.filter((month) => month.key <= throughMonth).reduce((total, month) => total + Number(account.credits[month.key] || 0) - Number(account.spent[month.key] || 0) - Number(account.converted[month.key] || 0), 0);
+    }
+    function voucherRemaining(voucher) { return Math.max(0, Number(voucher.amount || 0) - Number(voucher.used || 0)); }
+
+    function benefitsView() {
+      const monthKey = benefitMonthKey();
+      state.benefitMonth = monthKey;
+      const flashBalance = benefitKeys().reduce((total, key) => total + benefitBalance(key, monthKey), 0);
+      const voucherBalance = state.benefits.vouchers.filter((voucher) => voucher.month <= monthKey).reduce((total, voucher) => total + voucherRemaining(voucher), 0);
+      const monthUsed = benefitKeys().reduce((total, key) => total + Number(state.benefits.accounts[key].spent[monthKey] || 0), 0);
+      return `<div class="card benefits-view">
+        <div class="benefits-head">
+          <div class="benefits-title"><h2>Benefícios Flash</h2><p>Saldo de consumo separado da sua renda e do caixa bancário.</p></div>
+          <label class="month-pick">Mês <select onchange="setBenefitMonth(this.value)">${state.months.map((month) => `<option value="${month.key}" ${month.key === monthKey ? "selected" : ""}>${month.label}</option>`).join("")}</select></label>
+        </div>
+        <div class="benefit-summary">
+          <div class="benefit-kpi"><span>No cartão Flash</span><b>${money(flashBalance)}</b></div>
+          <div class="benefit-kpi"><span>Em vales-presente</span><b>${money(voucherBalance)}</b></div>
+          <div class="benefit-kpi total"><span>Total disponível</span><b>${money(flashBalance + voucherBalance)}</b></div>
+        </div>
+        <div class="benefit-grid">${benefitKeys().map((key) => benefitCard(key, monthKey)).join("")}</div>
+        <div class="voucher-panel">
+          <div class="section-head"><div><h2 class="panel-title">Vales-presente</h2><p class="hint">A conversão sai do saldo Flash e continua aqui até o vale ser usado.</p></div><span class="hint">Uso direto no mês: ${money(monthUsed)}</span></div>
+          <div class="voucher-add">
+            <input id="voucherName" class="input voucher-name" placeholder="Loja ou vale (ex: iFood, Amazon)" />
+            <select id="voucherSource" class="input">${benefitKeys().map((key) => `<option value="${key}">${benefitMeta(key).label}</option>`).join("")}</select>
+            <div class="money-field"><input id="voucherAmount" class="input" type="number" min="0" step="0.01" inputmode="decimal" placeholder="valor" /></div>
+            <button class="btn-primary" type="button" onclick="addVoucher('${monthKey}')">Registrar conversão</button>
+          </div>
+          <div class="voucher-list">${voucherList(monthKey)}</div>
+        </div>
+      </div>`;
+    }
+
+    function benefitCard(key, monthKey) {
+      const meta = benefitMeta(key);
+      const account = state.benefits.accounts[key];
+      return `<section class="benefit-card" style="--bc:${meta.color}">
+        <header><strong>${meta.label}</strong><span class="benefit-balance">${money(benefitBalance(key, monthKey))}</span></header>
+        <div class="benefit-fields">
+          <label>Crédito no mês<input type="number" min="0" step="0.01" inputmode="decimal" value="${account.credits[monthKey] || ""}" onchange="updateBenefit('${key}','credits','${monthKey}',this.value)" /></label>
+          <label>Uso direto<input type="number" min="0" step="0.01" inputmode="decimal" value="${account.spent[monthKey] || ""}" onchange="updateBenefit('${key}','spent','${monthKey}',this.value)" /></label>
+          <label>Convertido<input type="number" min="0" step="0.01" inputmode="decimal" value="${account.converted[monthKey] || ""}" readonly title="Calculado pelos vales registrados" /></label>
+        </div>
+      </section>`;
+    }
+
+    function voucherList(monthKey) {
+      const vouchers = state.benefits.vouchers.filter((voucher) => voucher.month <= monthKey).sort((a, b) => String(b.month).localeCompare(String(a.month)));
+      if (!vouchers.length) return `<div class="empty">Nenhum vale-presente registrado até este mês.</div>`;
+      return vouchers.map((voucher) => `<div class="voucher-row">
+        <div><strong>${attr(voucher.name)}</strong><small>${benefitMeta(voucher.source).label} · ${labelForMonth(voucher.month)} · valor ${money(voucher.amount)}</small></div>
+        <span class="remaining">resta ${money(voucherRemaining(voucher))}</span>
+        <input type="number" min="0" max="${Number(voucher.amount || 0)}" step="0.01" inputmode="decimal" value="${voucher.used || ""}" placeholder="valor usado" title="Quanto deste vale já foi usado" onchange="updateVoucherUsed('${voucher.id}',this.value)" />
+        <button class="minibtn danger" type="button" title="Excluir conversão" onclick="deleteVoucher('${voucher.id}')">×</button>
+      </div>`).join("");
+    }
+
+    function setBenefitMonth(monthKey) { state.benefitMonth = monthKey; render(); }
+    function updateBenefit(key, field, monthKey, rawValue) {
+      const account = state.benefits.accounts[key];
+      const value = Math.max(0, numberValue(rawValue));
+      if (value === 0) delete account[field][monthKey]; else account[field][monthKey] = value;
+      render();
+    }
+    function addVoucher(monthKey) {
+      const name = document.getElementById("voucherName").value.trim();
+      const source = document.getElementById("voucherSource").value;
+      const amount = Math.max(0, numberValue(document.getElementById("voucherAmount").value));
+      if (!name || amount <= 0) { document.getElementById(!name ? "voucherName" : "voucherAmount").focus(); return; }
+      const available = benefitBalance(source, monthKey);
+      if (amount > available + 0.01 && !confirm(`O saldo disponível em ${benefitMeta(source).label} é ${money(available)}. Registrar mesmo assim?`)) return;
+      state.benefits.vouchers.push({ id: `voucher-${Date.now()}`, name, source, month: monthKey, amount, used: 0 });
+      recalculateBenefitConversions();
+      render();
+    }
+    function updateVoucherUsed(id, rawValue) {
+      const voucher = state.benefits.vouchers.find((entry) => entry.id === id);
+      if (!voucher) return;
+      voucher.used = Math.min(Number(voucher.amount || 0), Math.max(0, numberValue(rawValue)));
+      render();
+    }
+    function deleteVoucher(id) {
+      const voucher = state.benefits.vouchers.find((entry) => entry.id === id);
+      if (!voucher || !confirm(`Excluir a conversão para ${voucher.name}?`)) return;
+      state.benefits.vouchers = state.benefits.vouchers.filter((entry) => entry.id !== id);
+      recalculateBenefitConversions();
+      render();
+    }
+    function recalculateBenefitConversions() {
+      benefitKeys().forEach((key) => { state.benefits.accounts[key].converted = {}; });
+      state.benefits.vouchers.forEach((voucher) => {
+        const account = state.benefits.accounts[voucher.source];
+        if (!account) return;
+        account.converted[voucher.month] = Number(account.converted[voucher.month] || 0) + Number(voucher.amount || 0);
+      });
     }
 
     /* ---------- budget view ---------- */
