@@ -386,11 +386,18 @@
     .benefit-card header strong { display: flex; align-items: center; gap: 8px; font-size: 15px; }
     .benefit-card header strong::before { content: ""; width: 9px; height: 9px; border-radius: 3px; background: var(--bc); }
     .benefit-balance { color: var(--bc); font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
-    .benefit-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .benefit-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
     .benefit-fields label { display: grid; gap: 5px; min-width: 0; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
     .benefit-fields input { width: 100%; min-width: 0; min-height: 38px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); padding: 0 9px; font-variant-numeric: tabular-nums; }
     .benefit-fields input:focus { outline: none; border-color: var(--bc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--bc) 18%, #fff); }
     .benefit-readonly { min-height: 38px; display: flex; align-items: center; justify-content: flex-end; border: 0; border-radius: 9px; background: color-mix(in srgb, var(--bc) 8%, var(--surface)); padding: 0 10px; color: var(--bc); font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .benefit-purchases { display: grid; gap: 0; border-top: 1px solid var(--line); padding-top: 8px; }
+    .benefit-purchase { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 7px 2px; font-size: 12px; }
+    .benefit-purchase + .benefit-purchase { border-top: 1px solid var(--hair); }
+    .benefit-purchase span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .benefit-purchase b { font-variant-numeric: tabular-nums; }
+    .benefit-purchase small { display: block; margin-top: 2px; color: var(--muted); }
+    .benefit-empty { padding: 8px 2px 1px; color: var(--muted); font-size: 11.5px; }
     .voucher-panel { border-top: 1px solid var(--line); padding-top: 18px; display: grid; gap: 12px; }
     .voucher-add { display: grid; grid-template-columns: 1fr 150px 150px auto; gap: 9px; }
     .voucher-add button { min-height: 42px; padding: 0 16px; }
@@ -569,7 +576,7 @@
       .benefits-view { padding: 16px; }
       .benefit-summary { grid-template-columns: 1fr; }
       .benefit-grid { grid-template-columns: 1fr; }
-      .benefit-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .benefit-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .voucher-add { grid-template-columns: 1fr 1fr; }
       .voucher-add .voucher-name { grid-column: 1 / -1; }
       .voucher-add button { grid-column: 1 / -1; }
@@ -1198,7 +1205,7 @@
     }
     function benefitBalance(key, throughMonth) {
       const account = state.benefits.accounts[key];
-      return state.months.filter((month) => month.key <= throughMonth).reduce((total, month) => total + Number(account.credits[month.key] || 0) - Number(account.spent[month.key] || 0) - benefitMovementSpent(key, month.key) - Number(account.converted[month.key] || 0), 0);
+      return state.months.filter((month) => month.key <= throughMonth).reduce((total, month) => total + Number(account.credits[month.key] || 0) - benefitMovementSpent(key, month.key) - Number(account.converted[month.key] || 0), 0);
     }
     function benefitMovementSpent(key, monthKey) {
       return state.items.filter((entry) => entry.paymentSource === key).reduce((total, entry) => total + Number(entry.actuals && entry.actuals[monthKey] || 0), 0);
@@ -1210,7 +1217,7 @@
       state.benefitMonth = monthKey;
       const flashBalance = benefitKeys().reduce((total, key) => total + benefitBalance(key, monthKey), 0);
       const voucherBalance = state.benefits.vouchers.filter((voucher) => voucher.month <= monthKey).reduce((total, voucher) => total + voucherRemaining(voucher), 0);
-      const monthUsed = benefitKeys().reduce((total, key) => total + Number(state.benefits.accounts[key].spent[monthKey] || 0) + benefitMovementSpent(key, monthKey), 0);
+      const monthUsed = benefitKeys().reduce((total, key) => total + benefitMovementSpent(key, monthKey), 0);
       return `<div class="card benefits-view">
         <div class="benefits-head">
           <div class="benefits-title"><h2>Benefícios Flash</h2><p>Saldo de consumo separado da sua renda e do caixa bancário.</p></div>
@@ -1239,16 +1246,19 @@
       const meta = benefitMeta(key);
       const account = state.benefits.accounts[key];
       const flowSpent = benefitMovementSpent(key, monthKey);
-      const manualSpent = Number(account.spent[monthKey] || 0);
-      const totalSpent = flowSpent + manualSpent;
+      const purchases = state.items.filter((entry) => entry.paymentSource === key && (Number(entry.amounts[monthKey] || 0) !== 0 || Number(entry.actuals && entry.actuals[monthKey] || 0) !== 0));
       return `<section class="benefit-card" style="--bc:${meta.color}">
         <header><strong>${meta.label}</strong><span class="benefit-balance">${money(benefitBalance(key, monthKey))}</span></header>
         <div class="benefit-fields">
           <label>Crédito no mês<input type="number" min="0" step="0.01" inputmode="decimal" value="${account.credits[monthKey] || ""}" onchange="updateBenefit('${key}','credits','${monthKey}',this.value)" /></label>
-          <label>Gasto fora do fluxo<input type="number" min="0" step="0.01" inputmode="decimal" value="${account.spent[monthKey] || ""}" onchange="updateBenefit('${key}','spent','${monthKey}',this.value)" title="Compras no Flash que não foram lançadas na movimentação" /></label>
-          <label>Gastos no cartão<span class="benefit-readonly" title="${money(flowSpent)} lançados no fluxo + ${money(manualSpent)} fora do fluxo">${money(totalSpent)}</span></label>
+          <label>Gastos no cartão<span class="benefit-readonly" title="Soma dos lançamentos realizados no fluxo">${money(flowSpent)}</span></label>
           <label>Convertido<span class="benefit-readonly" title="Calculado pelos vales-presente registrados">${money(account.converted[monthKey] || 0)}</span></label>
         </div>
+        <div class="benefit-purchases">${purchases.length ? purchases.map((entry) => {
+          const projected = Number(entry.amounts[monthKey] || 0);
+          const actual = Number(entry.actuals && entry.actuals[monthKey] || 0);
+          return `<div class="benefit-purchase"><span>${attr(entry.name)}<small>Projetado ${money(projected)}</small></span><b>${actual > 0 ? money(actual) : "pendente"}</b></div>`;
+        }).join("") : `<div class="benefit-empty">Nenhum gasto lançado com este benefício no mês.</div>`}</div>
       </section>`;
     }
 
