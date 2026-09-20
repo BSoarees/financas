@@ -766,6 +766,7 @@
             <button type="button" class="chip" data-bucket="educacao">Educação</button>
             <button type="button" class="chip" data-bucket="liberdade">Liberdade</button>
             <button type="button" class="chip" data-bucket="reserva">Reserva</button>
+            <button type="button" class="chip" data-bucket="investimentos">Investimentos</button>
             <button type="button" class="chip" data-bucket="folga">Folga</button>
             <button type="button" class="chip" data-bucket="fora">Dívidas &amp; travados</button>
           </div>
@@ -871,7 +872,7 @@
     const seed = {
       openingCash: 0,
       months: baseMonths,
-      targets: { necessidades: 55, lazer: 10, educacao: 10, liberdade: 10, reserva: 5, folga: 10 },
+      targets: { necessidades: 55, lazer: 10, educacao: 10, liberdade: 10, reserva: 5, investimentos: 0, folga: 10 },
       targetRate: 2.5,
       cards: [],
       benefits: {
@@ -914,17 +915,18 @@
       return out;
     }
 
-    function defaultBucket(kind) { return kind === "debt" ? "fora" : (["saving", "reserve_withdrawal", "investment"].includes(kind)) ? "reserva" : "necessidades"; }
-    function bucketOrder() { return ["necessidades", "lazer", "educacao", "liberdade", "reserva", "folga"]; }
+    function defaultBucket(kind) { return kind === "debt" ? "fora" : kind === "investment" ? "investimentos" : (["saving", "reserve_withdrawal"].includes(kind)) ? "reserva" : "necessidades"; }
+    function bucketOrder() { return ["necessidades", "lazer", "educacao", "liberdade", "reserva", "investimentos", "folga"]; }
     function bucketLabel(bucket) {
-      return ({ necessidades: "Necessidades", lazer: "Lazer", educacao: "Educacao", liberdade: "Liberdade financeira", reserva: "Reserva", folga: "Folga / livre", fora: "Dividas & travados" })[bucket] || bucket;
+      return ({ necessidades: "Necessidades", lazer: "Lazer", educacao: "Educacao", liberdade: "Liberdade financeira", reserva: "Reserva", investimentos: "Investimentos", folga: "Folga / livre", fora: "Dividas & travados" })[bucket] || bucket;
     }
     function bucketOptions(selected) {
       return [...bucketOrder(), "fora"].map((b) => `<option value="${b}" ${b === selected ? "selected" : ""}>${bucketLabel(b)}</option>`).join("");
     }
 
     function ensureBudgetFields(target) {
-      if (!target.targets) target.targets = { necessidades: 55, lazer: 10, educacao: 10, liberdade: 10, reserva: 5, folga: 10 };
+      if (!target.targets) target.targets = { necessidades: 55, lazer: 10, educacao: 10, liberdade: 10, reserva: 5, investimentos: 0, folga: 10 };
+      if (target.targets.investimentos == null) target.targets.investimentos = 0;
       if (target.targets.fora == null) target.targets.fora = 0;
       if (target.targetRate == null) target.targetRate = 2.5;
       if (!Array.isArray(target.cards)) target.cards = [];
@@ -935,6 +937,7 @@
       target.targets.folga = Math.max(0, 100 - fixedTargetTotal);
       (target.items || []).forEach((entry) => {
         if (entry.kind === "saving" && /retirada/i.test(String(entry.name || ""))) entry.kind = "reserve_withdrawal";
+        if (entry.kind === "investment") entry.bucket = "investimentos";
         if (!entry.done || typeof entry.done !== "object") entry.done = {};
         if (!entry.actuals || typeof entry.actuals !== "object") entry.actuals = {};
         if (["income", "investment_redemption"].includes(entry.kind)) { entry.bucket = null; return; }
@@ -1907,7 +1910,7 @@
 
     /* ---------- months view ---------- */
     function poteColor(b) {
-      return ({ necessidades: "#2a78d6", lazer: "#eb6834", educacao: "#6a4fb0", liberdade: "#0ca30c", reserva: "#1baf7a", folga: "#8b918a", fora: "#d03b3b" })[b] || "#8b918a";
+      return ({ necessidades: "#2a78d6", lazer: "#eb6834", educacao: "#6a4fb0", liberdade: "#0ca30c", reserva: "#1baf7a", investimentos: "#7555c7", folga: "#8b918a", fora: "#d03b3b" })[b] || "#8b918a";
     }
 
     function monthsView() {
@@ -2179,7 +2182,7 @@
     function addInvestmentEvent(button) {
       const root = button.closest(".inv-event-form"), assetId = root.querySelector(".inv-event-asset").value, date = root.querySelector(".inv-event-date").value; if (!assetId || !date) return; const e = { id:`invevent-${Date.now()}`, assetId, type:investmentAction, date };
       if (investmentAction === "withdrawal") { e.net = numberValue(root.querySelector(".inv-net").value); e.tax = numberValue(root.querySelector(".inv-tax").value); e.gross = e.net + e.tax; if (e.net <= 0) return root.querySelector(".inv-net").focus(); } else { e.amount = numberValue(root.querySelector(".inv-amount").value); if (e.amount < 0 || (investmentAction === "contribution" && e.amount <= 0)) return root.querySelector(".inv-amount").focus(); }
-      state.investments.events.push(e); const month = ensureMonthForDate(date), asset = state.investments.assets.find((a) => a.id === assetId); if (e.type === "contribution") { const flow = item(`invflow-${e.id}`, `Aporte · ${asset.name}`, "investment", {[month]:e.amount}, "reserva"); flow.actuals[month]=e.amount; flow.done[month]=true; flow.investmentEventId=e.id; state.items.push(flow); } if (e.type === "withdrawal") { const flow=item(`invflow-${e.id}`, `Resgate líquido · ${asset.name}`, "investment_redemption", {[month]:e.net}); flow.actuals[month]=e.net; flow.done[month]=true; flow.investmentEventId=e.id; state.items.push(flow); } render();
+      state.investments.events.push(e); const month = ensureMonthForDate(date), asset = state.investments.assets.find((a) => a.id === assetId); if (e.type === "contribution") { const flow = item(`invflow-${e.id}`, `Aporte · ${asset.name}`, "investment", {[month]:e.amount}, "investimentos"); flow.actuals[month]=e.amount; flow.done[month]=true; flow.investmentEventId=e.id; state.items.push(flow); } if (e.type === "withdrawal") { const flow=item(`invflow-${e.id}`, `Resgate líquido · ${asset.name}`, "investment_redemption", {[month]:e.net}); flow.actuals[month]=e.net; flow.done[month]=true; flow.investmentEventId=e.id; state.items.push(flow); } render();
     }
     function deleteInvestmentEvent(id) { if (!confirm("Excluir esta movimentação?")) return; state.investments.events=state.investments.events.filter((e)=>e.id!==id); state.items=state.items.filter((e)=>e.investmentEventId!==id); render(); }
     function deleteInvestmentAsset(id) { if (!confirm("Excluir o ativo e todas as movimentações dele?")) return; const ids=state.investments.events.filter((e)=>e.assetId===id).map((e)=>e.id); state.investments.assets=state.investments.assets.filter((a)=>a.id!==id); state.investments.events=state.investments.events.filter((e)=>e.assetId!==id); state.items=state.items.filter((e)=>!ids.includes(e.investmentEventId)); render(); }

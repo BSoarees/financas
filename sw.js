@@ -1,5 +1,5 @@
 /* cache so do casco do app. dado nunca passa por aqui. */
-const CACHE = "financas-v4";
+const CACHE = "financas-v5";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (event) => {
